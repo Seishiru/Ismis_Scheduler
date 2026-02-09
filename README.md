@@ -4,7 +4,13 @@ A full-stack application for scraping and visualizing USC (University of San Car
 
 ## Overview
 
-This project automates the collection of course schedule data from the USC ISMIS (Information System for Management of Instructional Services) system and provides a user-friendly web interface to view, analyze, and manage course schedules.
+This project automates the collection of course schedule data from the University of San Carlos ISMIS (Information System for Management of Instructional Services) system and provides a user-friendly web interface to view, analyze, and manage course schedules.
+
+The project is organized into isolated modules:
+- **Backend**: Python-based web scraper for ISMIS data extraction
+- **Frontend**: React-based interactive calendar interface
+- **Generated**: Output files organized by type (HTML visualizations, JSON data)
+- **Miscellaneous**: Configuration and reference files
 
 ## Features
 
@@ -19,17 +25,39 @@ This project automates the collection of course schedule data from the USC ISMIS
 
 ```
 ISMIS_Scheduler/
-├── ismis_scheduler.py          # Main scraper script
-├── calendar_test.py            # Calendar visualization test utilities
-├── test_real_data.py           # Real data testing utilities
-├── main.tsx                    # React application entry point
-├── index.html                  # HTML template
-├── vite.config.ts              # Vite build configuration
-├── tsconfig.json               # TypeScript configuration
-├── package.json                # Node.js dependencies
-├── courses.json                # Sample course data
-├── 2nd-Semester_2025.json      # Semester schedule data
-└── schedule_view_*.html        # Generated schedule visualizations
+├── README.md                          # Project documentation
+│
+├── backend/                           # Python backend
+│   ├── ismis_scheduler.py            # Main ISMIS web scraper and parser
+│   ├── calendar_test.py              # Calendar visualization test utilities
+│   ├── test_real_data.py             # Testing with real course data
+│   └── __pycache__/                  # Python compiled cache
+│
+├── frontend/                          # React + TypeScript frontend
+│   ├── main.tsx                      # React application entry point
+│   ├── index.html                    # HTML template
+│   ├── package.json                  # Node.js dependencies
+│   ├── package-lock.json             # Dependency lock file
+│   ├── vite.config.ts                # Vite build configuration
+│   ├── tsconfig.json                 # TypeScript configuration
+│   ├── tsconfig.node.json            # TypeScript Node configuration
+│   ├── node_modules/                 # Installed Node packages
+│   └── src/                          # (optional) React source files
+│
+├── generated/                         # Output and generated files
+│   ├── html/                         # Generated HTML schedules
+│   │   ├── schedule_view_*.html      # Schedule visualizations
+│   │   └── calendar_test_output.html # Calendar test output
+│   │
+│   └── json/                         # Generated and sample data
+│       ├── courses.json              # Sample course data
+│       ├── 2nd-Semester_2025.json   # Semester schedule data
+│       └── schedules_*.json          # Generated schedule exports
+│
+├── miscellaneous/                     # Configuration and reference files
+│   └── .gitignore                    # Git ignore rules
+│
+└── .git/                             # Git repository
 ```
 
 ## Technologies Used
@@ -57,19 +85,23 @@ ISMIS_Scheduler/
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Seishiru/Ismis_Scheduler.git
    cd ISMIS_Scheduler
    ```
 
-2. **Install Python dependencies**
+2. **Install Python dependencies** (for backend scraper)
    ```bash
+   cd backend
    pip install playwright
    playwright install
+   cd ..
    ```
 
-3. **Install Node.js dependencies**
+3. **Install Node.js dependencies** (for frontend)
    ```bash
+   cd frontend
    npm install
+   cd ..
    ```
 
 ## Usage
@@ -77,16 +109,23 @@ ISMIS_Scheduler/
 ### Running the Scraper
 
 ```bash
+cd backend
 python ismis_scheduler.py
+cd ..
 ```
 
 The scraper will:
 1. Connect to the ISMIS system
 2. Extract course information
 3. Parse schedule data
-4. Export to JSON format
+4. Export to JSON format in `generated/json/`
 
 ### Running the Web Interface
+
+Navigate to the frontend directory:
+```bash
+cd frontend
+```
 
 **Development mode:**
 ```bash
@@ -102,8 +141,11 @@ npm run preview
 ### Running Tests
 
 ```bash
+# From the backend directory
+cd backend
 python calendar_test.py
 python test_real_data.py
+cd ..
 ```
 
 ## Data Format
