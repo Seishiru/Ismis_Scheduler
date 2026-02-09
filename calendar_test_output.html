@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Test - ISMIS Schedule</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .info {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .calendar-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .calendar th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #ddd;
+        }
+        .calendar td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            vertical-align: top;
+            height: 50px;
+            background: #f9f9f9;
+        }
+        .calendar td:first-child {
+            background: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            width: 80px;
+        }
+        .course-block {
+            background: #667eea;
+            color: white;
+            padding: 4px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin: 2px 0;
+            word-wrap: break-word;
+            border-left: 4px solid;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📅 Calendar Test - Debug Mode</h1>
+        
+        <div class="info">
+            <h3>Test Summary:</h3>
+            <p>✓ Successfully parsed: 5</p>
+            <p>❌ Failed to parse: 0</p>
+            <p>📚 Time slots in calendar: 9</p>
+            <p>⏰ Time range: 07:30 - 16:00</p>
+        </div>
+        
+        <div class="calendar-container">
+            <h2>Weekly Schedule</h2>
+            <table class="calendar">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                        <th>Sunday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>07:30</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #FFA07A; background: #FFA07A;">CIS 2106N - Group 1</div></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>08:00</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #FFA07A; background: #FFA07A;">CIS 2106N - Group 1</div></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>08:30</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #FFA07A; background: #FFA07A;">CIS 2106N - Group 1</div></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>09:00</td>
+                        <td><div class="course-block" style="border-left-color: #4ECDC4; background: #4ECDC4;">GE-STS - Group 6</div></td>
+                        <td><div class="course-block" style="border-left-color: #FF6B6B; background: #FF6B6B;">GE-STS - Group 1</div></td>
+                        <td><div class="course-block" style="border-left-color: #4ECDC4; background: #4ECDC4;">GE-STS - Group 6</div></td>
+                        <td><div class="course-block" style="border-left-color: #FF6B6B; background: #FF6B6B;">GE-STS - Group 1</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #FFA07A; background: #FFA07A;">CIS 2106N - Group 1</div></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>09:30</td>
+                        <td><div class="course-block" style="border-left-color: #4ECDC4; background: #4ECDC4;">GE-STS - Group 6</div></td>
+                        <td><div class="course-block" style="border-left-color: #FF6B6B; background: #FF6B6B;">GE-STS - Group 1</div></td>
+                        <td><div class="course-block" style="border-left-color: #4ECDC4; background: #4ECDC4;">GE-STS - Group 6</div></td>
+                        <td><div class="course-block" style="border-left-color: #FF6B6B; background: #FF6B6B;">GE-STS - Group 1</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #FFA07A; background: #FFA07A;">CIS 2106N - Group 1</div></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>10:00</td>
+                        <td><div class="course-block" style="border-left-color: #4ECDC4; background: #4ECDC4;">GE-STS - Group 6</div></td>
+                        <td><div class="course-block" style="border-left-color: #FF6B6B; background: #FF6B6B;">GE-STS - Group 1</div></td>
+                        <td><div class="course-block" style="border-left-color: #4ECDC4; background: #4ECDC4;">GE-STS - Group 6</div></td>
+                        <td><div class="course-block" style="border-left-color: #FF6B6B; background: #FF6B6B;">GE-STS - Group 1</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #FFA07A; background: #FFA07A;">CIS 2106N - Group 1</div></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>10:30</td>
+                        <td><div class="course-block" style="border-left-color: #45B7D1; background: #45B7D1;">CIS 2101 - Group 1</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #45B7D1; background: #45B7D1;">CIS 2101 - Group 1</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>11:00</td>
+                        <td><div class="course-block" style="border-left-color: #45B7D1; background: #45B7D1;">CIS 2101 - Group 1</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #45B7D1; background: #45B7D1;">CIS 2101 - Group 1</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>11:30</td>
+                        <td><div class="course-block" style="border-left-color: #45B7D1; background: #45B7D1;">CIS 2101 - Group 1</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #45B7D1; background: #45B7D1;">CIS 2101 - Group 1</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>12:00</td>
+                        <td><div class="course-block" style="border-left-color: #45B7D1; background: #45B7D1;">CIS 2101 - Group 1</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #45B7D1; background: #45B7D1;">CIS 2101 - Group 1</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>12:30</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>13:00</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>13:30</td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #98D8C8; background: #98D8C8;">CIS 2203 - Group 2</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #98D8C8; background: #98D8C8;">CIS 2203 - Group 2</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>14:00</td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #98D8C8; background: #98D8C8;">CIS 2203 - Group 2</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #98D8C8; background: #98D8C8;">CIS 2203 - Group 2</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>14:30</td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #98D8C8; background: #98D8C8;">CIS 2203 - Group 2</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #98D8C8; background: #98D8C8;">CIS 2203 - Group 2</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>15:00</td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #98D8C8; background: #98D8C8;">CIS 2203 - Group 2</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #98D8C8; background: #98D8C8;">CIS 2203 - Group 2</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>15:30</td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #98D8C8; background: #98D8C8;">CIS 2203 - Group 2</div></td>
+                        <td></td>
+                        <td><div class="course-block" style="border-left-color: #98D8C8; background: #98D8C8;">CIS 2203 - Group 2</div></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>16:00</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="info" style="margin-top: 20px;">
+            <h3>Course List:</h3>
+            <ul>
+                <li><strong>GE-STS - Group 1</strong> - TTh 09:00 AM - 10:30 AM - LB264TC - LIWAG, JOHN WARUEL F.</li>
+                <li><strong>GE-STS - Group 6</strong> - MW 09:00 AM - 10:30 AM - MR103TC - PILI, UNOFRE B.</li>
+                <li><strong>CIS 2101 - Group 1</strong> - MW 10:00 AM - 12:30 PM - LB448TC - SABADO, JANIE LANE T.</li>
+                <li><strong>CIS 2106N - Group 1</strong> - Sat 07:30 AM - 10:30 AM - LB448TC - DELA PAZ, KHENT L.</li>
+                <li><strong>CIS 2203 - Group 2</strong> - TTh 01:30 PM - 04:00 PM - LB447TC - GONZALES, JOFFERSON T.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
