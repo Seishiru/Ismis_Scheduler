@@ -2,10 +2,17 @@
 Quick test for Schedule Generator with real course data
 """
 import json
+import os
 from ismis_scheduler import parse_schedule, check_slot_availability
 
+# Get paths
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+JSON_DIR = os.path.join(PROJECT_ROOT, "generated", "json")
+
 # Load real courses
-with open('courses.json', 'r') as f:
+courses_path = os.path.join(JSON_DIR, 'courses.json')
+with open(courses_path, 'r') as f:
     courses = json.load(f)
 
 print("=" * 60)

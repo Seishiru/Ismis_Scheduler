@@ -11,6 +11,18 @@ import os
 
 
 # ============================================================================
+# PATH CONFIGURATION
+# ============================================================================
+
+# Get the script's directory and construct paths relative to it
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)  # Parent directory (ISMIS_Scheduler)
+GENERATED_DIR = os.path.join(PROJECT_ROOT, "generated")
+JSON_DIR = os.path.join(GENERATED_DIR, "json")
+HTML_DIR = os.path.join(GENERATED_DIR, "html")
+
+
+# ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
 
@@ -560,10 +572,10 @@ def generate_schedule_html(combinations: list):
 </html>"""
     
     # Create generated folder if it doesn't exist
-    os.makedirs("generated", exist_ok=True)
+    os.makedirs(HTML_DIR, exist_ok=True)
     
     # Save to file
-    filename = f"generated/schedule_view_{int(time.time())}.html"
+    filename = os.path.join(HTML_DIR, f"schedule_view_{int(time.time())}.html")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(html_content)
     
@@ -814,7 +826,10 @@ def schedule_generator(filename: str = None):
     if filename is None:
         filename = input("Enter JSON filename (or press Enter for courses.json): ").strip()
         if not filename:
-            filename = "courses.json"
+            filename = os.path.join(JSON_DIR, "courses.json")
+        elif not os.path.isabs(filename):
+            # If relative path, look in JSON_DIR
+            filename = os.path.join(JSON_DIR, filename)
     
     try:
         # Load courses
@@ -931,8 +946,8 @@ def schedule_generator(filename: str = None):
         # Option to save
         save_choice = input("\nSave schedules to JSON file? (y/N): ").strip().lower()
         if save_choice == "y":
-            os.makedirs("generated", exist_ok=True)
-            output_filename = f"generated/schedules_{int(time.time())}.json"
+            os.makedirs(JSON_DIR, exist_ok=True)
+            output_filename = os.path.join(JSON_DIR, f"schedules_{int(time.time())}.json")
             with open(output_filename, "w", encoding="utf-8") as f:
                 json.dump(combinations, f, indent=2, ensure_ascii=False)
             print(f"✓ Saved to {output_filename}")

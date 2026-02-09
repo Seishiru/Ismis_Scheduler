@@ -6,6 +6,15 @@ Used to debug schedule parsing and display issues
 import re
 import time
 import json
+import os
+
+# ============================================================================
+# PATH CONFIGURATION
+# ============================================================================
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+HTML_DIR = os.path.join(PROJECT_ROOT, "generated", "html")
 
 # ============================================================================
 # DUMMY TEST DATA
@@ -428,7 +437,8 @@ if __name__ == "__main__":
     html_content = generate_simple_calendar_html(DUMMY_COURSES)
     
     # Save to file
-    filename = "calendar_test_output.html"
+    os.makedirs(HTML_DIR, exist_ok=True)
+    filename = os.path.join(HTML_DIR, "calendar_test_output.html")
     with open(filename, "w", encoding="utf-8") as f:
         f.write(html_content)
     
