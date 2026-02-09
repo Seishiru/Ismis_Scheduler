@@ -1056,6 +1056,72 @@ def json_scrape(page: Page):
 # AUTHENTICATION & NAVIGATION
 # ============================================================================
 
+def scrape_academic_options(username: str, password: str, headless: bool = True):
+    """
+    Logs into ISMIS and scrapes available academic periods and years.
+    Returns a dictionary with academic_periods (list of dicts) and academic_years (list of strings).
+    """
+    from playwright.sync_api import sync_playwright
+    
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=headless)
+        page = browser.new_page()
+        setup_page_optimizations(page)
+        
+        # Navigate to login page
+        page.goto("https://ismis.usc.edu.ph/Account/Login?ReturnUrl=%2F", wait_until="domcontentloaded")
+        
+        # Enter credentials and submit
+        page.locator("#Username").fill(username)
+        page.locator("#Password").fill(password)
+        page.get_by_role("button", name="Login").click()
+        page.locator("#Username").wait_for(state="hidden", timeout=45000)
+        polite_pause()
+        
+        # Navigate to course schedule page
+        page.goto("https://ismis.usc.edu.ph/courseschedule/CourseScheduleOfferedIndex", wait_until="domcontentloaded")
+        
+        # Verify successful navigation
+        expect(page).to_have_title(re.compile("Academic Module", re.IGNORECASE))
+        
+        # Open the calendar filter
+        page.locator("i.fa-calendar").click()
+        polite_pause(0.5, 1.0)
+        
+        # Extract academic period options
+        period_options = []
+        period_select = page.locator("#AcademicPeriod option")
+        for i in range(period_select.count()):
+            option = period_select.nth(i)
+            value = option.get_attribute("value")
+            label = option.inner_text()
+            
+            # Skip empty options
+            if value and value != "":
+                period_options.append({
+                    "value": value,
+                    "label": label
+                })
+        
+        # Extract academic year options
+        year_options = []
+        year_select = page.locator("#AcademicYear option")
+        for i in range(year_select.count()):
+            option = year_select.nth(i)
+            value = option.get_attribute("value")
+            
+            # Skip empty options
+            if value and value != "":
+                year_options.append(value)
+        
+        browser.close()
+        
+        return {
+            "academic_periods": period_options,
+            "academic_years": year_options
+        }
+
+
 def login_inputs():
     """
     Prompts user for login credentials and courses to search.
@@ -1223,14 +1289,19 @@ def login(page: Page, username: str, password: str, courses: list, academic_peri
         page.locator("#Courses").fill("")
         page.locator("#Courses").fill(course_code)
         page.locator("i.fa-search").click()
-        # Wait for results table to refresh
-        page.locator("tbody tr").first.wait_for(state="visible", timeout=45000)
-        polite_pause()
         
-        # Scrape this course's data
-        course_data = json_scrape(page)
-        all_courses.extend(course_data)
-        print(f"  ✓ Found {len(course_data)} sections")
+        # Wait for results table to refresh
+        try:
+            page.locator("tbody tr").first.wait_for(state="visible", timeout=45000)
+            polite_pause()
+            
+            # Scrape this course's data
+            course_data = json_scrape(page)
+            all_courses.extend(course_data)
+            print(f"  ✓ Found {len(course_data)} sections")
+        except Exception:
+            print(f"  ✗ No results found for {course_code}")
+            continue
     
     show_progress(len(courses), len(courses), prefix="Overall")
     

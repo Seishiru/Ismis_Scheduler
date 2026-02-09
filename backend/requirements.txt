@@ -1,0 +1,8 @@
+# Core dependencies
+playwright==1.49.1
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.5
+
+# Additional utilities
+python-multipart==0.0.20
