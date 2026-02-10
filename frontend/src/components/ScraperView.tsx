@@ -127,12 +127,22 @@ export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
       return;
     }
 
+    if (!academicPeriod || !academicYear || academicPeriod === 'NONE' || academicYear === 'NONE') {
+      alert('Please select both Academic Period and Academic Year before scraping');
+      return;
+    }
+
     await scrapeAll(email, password, academicPeriod, academicYear);
   };
 
   const handleScrapeSpecific = async () => {
     if (!email || !password) {
       alert('Please enter your ISMIS credentials');
+      return;
+    }
+
+    if (!academicPeriod || !academicYear || academicPeriod === 'NONE' || academicYear === 'NONE') {
+      alert('Please select both Academic Period and Academic Year before scraping');
       return;
     }
 
@@ -300,6 +310,11 @@ export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
                   </SelectContent>
                 </Select>
               </div>
+              {(!academicPeriod || !academicYear || academicPeriod === 'NONE' || academicYear === 'NONE') && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 px-4 py-3 rounded-md text-sm">
+                  ⚠ Please select both Academic Period and Academic Year before scraping
+                </div>
+              )}
             </div>
           </Card>
 
@@ -319,10 +334,10 @@ export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
             </div>
             <Button
               onClick={handleScrapeAll}
-              disabled={isRunning || !email || !password}
+              disabled={isRunning || !email || !password || !academicPeriod || !academicYear || academicPeriod === 'NONE' || academicYear === 'NONE'}
               className="gap-2"
               style={{ 
-                backgroundColor: isRunning ? '#6b7280' : 'var(--usc-green)',
+                backgroundColor: (isRunning || !academicPeriod || !academicYear || academicPeriod === 'NONE' || academicYear === 'NONE') ? '#6b7280' : 'var(--usc-green)',
                 color: 'white'
               }}
             >
@@ -334,7 +349,7 @@ export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
               ) : (
                 <>
                   <Play className="w-4 h-4" />
-                  Scrape All
+                  {status?.status === 'completed' ? 'Scrape Again' : 'Scrape All'}
                 </>
               )}
             </Button>
@@ -358,12 +373,12 @@ export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
             </div>
             <Button
               onClick={handleScrapeSpecific}
-              disabled={isRunning || !email || !password || !courseCodes.trim()}
+              disabled={isRunning || !email || !password || !courseCodes.trim() || !academicPeriod || !academicYear || academicPeriod === 'NONE' || academicYear === 'NONE'}
               variant="outline"
               className="w-full"
             >
               <Play className="w-4 h-4 mr-2" />
-              Scrape Specific Courses
+              {status?.status === 'completed' ? 'Scrape Again (Specific)' : 'Scrape Specific Courses'}
             </Button>
           </div>
 

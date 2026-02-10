@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Generated outputs
+generated/
+
+# Local test artifacts
+frontend/test-schedule-logic.html

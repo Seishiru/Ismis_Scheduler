@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Card } from './ui/card';
-import { AlertTriangle, X, Clock, Sparkles, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Clock, Sparkles, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
@@ -15,11 +15,10 @@ interface ScheduledCourse extends Course {
 }
 
 interface ScheduleBuilderProps {
-  draggedCourse: Course | null;
   courses: Course[];
 }
 
-export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps) {
+export function ScheduleBuilder({ courses }: ScheduleBuilderProps) {
   const [scheduledCourses, setScheduledCourses] = useState<ScheduledCourse[]>([]);
   const [conflicts, setConflicts] = useState<Set<string>>(new Set());
   const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set());
@@ -67,8 +66,72 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
     }
   }, [currentScheduleIndex, schedules]);
 
+  // Keyboard navigation for schedule combinations
+  useEffect(() => {
+    if (!schedules || schedules.length === 0 || showSelection) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Prevent navigation if user is typing in an input field
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      if (event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft') {
+        event.preventDefault();
+        handlePreviousSchedule();
+      } else if (event.key === 'd' || event.key === 'D' || event.key === 'ArrowRight') {
+        event.preventDefault();
+        handleNextSchedule();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [schedules, showSelection, currentScheduleIndex]);
+
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
+  const slotHeight = 32; // 30-minute slot height
+  const timeSlots = useMemo(() => {
+    if (scheduledCourses.length === 0) {
+      return Array.from({ length: 26 }, (_, i) => 7 + i * 0.5); // 7:00 AM to 8:00 PM
+    }
+
+    const minStart = Math.min(...scheduledCourses.map((course) => course.startTime));
+    const maxEnd = Math.max(...scheduledCourses.map((course) => course.endTime));
+
+    let start = Math.floor(minStart * 2) / 2;
+    let end = Math.ceil(maxEnd * 2) / 2;
+
+    if (end <= start) {
+      end = start + 1;
+    }
+
+    const slots: number[] = [];
+    for (let time = start; time <= end; time += 0.5) {
+      slots.push(Number(time.toFixed(2)));
+    }
+
+    return slots;
+  }, [scheduledCourses]);
+
+  const courseColors = useMemo(() => {
+    const palette = [
+      '#FDE2E4', '#E2F0CB', '#CDE7F0', '#FFF1C1', '#E5E3F6',
+      '#FAD7C0', '#D6F5E3', '#FCE1F1', '#DCEAF7', '#E8F7D6',
+      '#FBE4C9', '#E4E7FF', '#DFF6F0', '#FCEED1', '#E7F0FF',
+    ];
+    const map = new Map<string, string>();
+
+    scheduledCourses.forEach((course) => {
+      const baseCode = course.code.split(' - ')[0];
+      if (!map.has(baseCode)) {
+        map.set(baseCode, palette[map.size % palette.length]);
+      }
+    });
+
+    return map;
+  }, [scheduledCourses]);
 
   const toggleCourseSelection = (courseCode: string) => {
     const newSelection = new Set(selectedCourses);
@@ -108,52 +171,163 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
     setCurrentScheduleIndex(prev => Math.min((schedules?.length || 1) - 1, prev + 1));
   };
 
-  const parseDayTime = (schedule: string): { days: string[], startTime: number, endTime: number } | null => {
-    // Parse formats like "MWF 7:30-8:30" or "TTh 9:00-10:30"
-    const match = schedule.match(/([MTWThFSa]+)\s+(\d+):(\d+)-(\d+):(\d+)/);
-    if (!match) return null;
+  const parseDayTime = (schedule: string): { days: string[]; startTime: number; endTime: number } | null => {
+    if (!schedule || /tba/i.test(schedule)) return null;
 
-    const dayMap: { [key: string]: string } = {
-      'M': 'Monday',
-      'T': 'Tuesday',
-      'W': 'Wednesday',
-      'Th': 'Thursday',
-      'F': 'Friday',
-      'S': 'Saturday',
-      'Sa': 'Saturday'
-    };
+    const normalized = schedule.trim().replace(/\s+/g, ' ');
+    const timeMatch = normalized.match(
+      /(\d{1,2}):(\d{2})\s*(AM|PM)?\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)?/i
+    );
 
-    const dayString = match[1];
-    const days: string[] = [];
-    
-    // Parse day string
-    let i = 0;
-    while (i < dayString.length) {
-      if (i < dayString.length - 1 && dayString.substring(i, i + 2) === 'Th') {
-        days.push('Thursday');
-        i += 2;
-      } else if (i < dayString.length - 1 && dayString.substring(i, i + 2) === 'Sa') {
-        days.push('Saturday');
-        i += 2;
-      } else {
-        const char = dayString[i];
-        if (dayMap[char]) {
-          days.push(dayMap[char]);
-        }
-        i++;
-      }
+    if (!timeMatch) {
+      console.warn('Failed to parse schedule:', schedule);
+      return null;
     }
 
-    const startHour = parseInt(match[2]);
-    const startMin = parseInt(match[3]);
-    const endHour = parseInt(match[4]);
-    const endMin = parseInt(match[5]);
+    const daySection = normalized.slice(0, timeMatch.index).trim();
+    if (!daySection) return null;
 
-    return {
-      days,
-      startTime: startHour + startMin / 60,
-      endTime: endHour + endMin / 60
+    const fullDayMap: Record<string, string> = {
+      MONDAY: 'Monday',
+      MON: 'Monday',
+      TUESDAY: 'Tuesday',
+      TUE: 'Tuesday',
+      WEDNESDAY: 'Wednesday',
+      WED: 'Wednesday',
+      THURSDAY: 'Thursday',
+      THU: 'Thursday',
+      TH: 'Thursday',
+      FRIDAY: 'Friday',
+      FRI: 'Friday',
+      SATURDAY: 'Saturday',
+      SAT: 'Saturday',
+      SUNDAY: 'Sunday',
+      SUN: 'Sunday',
     };
+
+    const days: string[] = [];
+    const tokens = daySection.split(/[^A-Za-z]+/).filter(Boolean);
+
+    const addCompactDays = (token: string) => {
+      const compactMap: Record<string, string> = {
+        M: 'Monday',
+        T: 'Tuesday',
+        W: 'Wednesday',
+        R: 'Thursday',
+        F: 'Friday',
+        S: 'Saturday',
+        U: 'Sunday',
+      };
+
+      // CRITICAL: Replace "Th" and "TH" with "R" FIRST before processing
+      // This ensures "TTh" becomes "TR" (Tuesday + Thursday) not "T" + "TH" (Tuesday + Thursday parsed wrong)
+      let compact = token.toUpperCase();
+      
+      // Replace all variations of "TH" with "R"
+      compact = compact.replace(/TH/g, 'R');
+      
+      // Remove standalone "H" that might remain
+      compact = compact.replace(/H/g, '');
+
+      compact.split('').forEach((char) => {
+        if (compactMap[char] && !days.includes(compactMap[char])) {
+          days.push(compactMap[char]);
+        }
+      });
+    };
+
+    const isCompactNotation = (token: string) => {
+      // Check if it's likely compact notation (e.g., "MWF", "TTH", "TTh", "MW")
+      // Compact notation is short and contains day letter codes
+      const upper = token.toUpperCase();
+      
+      // Must be 5 chars or less
+      if (upper.length > 5) return false;
+      
+      // Must contain only valid day characters (including "H" for "Th")
+      if (!/^[MTWRFSUHmtwrfsuh]+$/i.test(token)) return false;
+      
+      // Special patterns we recognize as compact
+      if (/^(M|T|W|R|F|S|U|TH|TTH|MW|MWF|TR|MTWRF)+$/i.test(upper)) return true;
+      
+      return true;
+    };
+
+    tokens.forEach((token) => {
+      const upper = token.toUpperCase();
+
+      // Special cases for Saturday/Sunday abbreviations
+      if (upper === 'SA' || upper === 'SAT') {
+        if (!days.includes('Saturday')) days.push('Saturday');
+        return;
+      }
+      if (upper === 'SU' || upper === 'SUN') {
+        if (!days.includes('Sunday')) days.push('Sunday');
+        return;
+      }
+
+      // Check if it's compact notation BEFORE trying full day matches
+      if (isCompactNotation(upper)) {
+        addCompactDays(upper);
+        return;
+      }
+
+      // Try full day name matching (Monday, Tuesday, etc.)
+      const hasFullMatch = upper.match(/(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY|MON|TUE|WED|THU|FRI)/g);
+      if (hasFullMatch) {
+        hasFullMatch.forEach((match) => {
+          const mapped = fullDayMap[match];
+          if (mapped && !days.includes(mapped)) {
+            days.push(mapped);
+          }
+        });
+        return;
+      }
+
+      // Fallback to compact notation
+      addCompactDays(upper);
+    });
+
+    if (days.length === 0) {
+      console.warn('No days parsed from:', schedule);
+      return null;
+    }
+
+    const startHour = parseInt(timeMatch[1], 10);
+    const startMin = parseInt(timeMatch[2], 10);
+    const startAmPm = timeMatch[3];
+    const endHour = parseInt(timeMatch[4], 10);
+    const endMin = parseInt(timeMatch[5], 10);
+    const endAmPm = timeMatch[6];
+
+    const to24Hour = (hour: number, ampm?: string) => {
+      if (!ampm) return hour;
+      const upper = ampm.toUpperCase();
+      if (upper === 'AM') return hour === 12 ? 0 : hour;
+      if (upper === 'PM') return hour === 12 ? 12 : hour + 12;
+      return hour;
+    };
+
+    let startHour24 = to24Hour(startHour, startAmPm);
+    let endHour24 = to24Hour(endHour, endAmPm);
+
+    if (!startAmPm && !endAmPm) {
+      if (startHour24 >= 1 && startHour24 < 8) startHour24 += 12;
+      if (endHour24 >= 1 && endHour24 < 8) endHour24 += 12;
+    }
+
+    const result = {
+      days,
+      startTime: Number((startHour24 + startMin / 60).toFixed(2)),
+      endTime: Number((endHour24 + endMin / 60).toFixed(2)),
+    };
+
+    console.log('Parsed schedule:', {
+      input: schedule,
+      output: result
+    });
+
+    return result;
   };
 
   const checkConflicts = (newCourses: ScheduledCourse[]) => {
@@ -179,42 +353,6 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
     setConflicts(conflictIds);
   };
 
-  const handleDrop = (_day: string, _hour: number) => {
-    if (!draggedCourse) return;
-
-    const parsed = parseDayTime(draggedCourse.schedule);
-    if (!parsed) return;
-
-    const newCourses: ScheduledCourse[] = [];
-    
-    parsed.days.forEach((courseDay) => {
-      const scheduledId = `${draggedCourse.code}-${courseDay}-${Date.now()}`;
-      newCourses.push({
-        ...draggedCourse,
-        scheduledId,
-        day: courseDay,
-        startTime: parsed.startTime,
-        endTime: parsed.endTime
-      });
-    });
-
-    const updatedCourses = [...scheduledCourses, ...newCourses];
-    setScheduledCourses(updatedCourses);
-    checkConflicts(updatedCourses);
-  };
-
-  const handleRemove = (scheduledId: string) => {
-    const course = scheduledCourses.find(c => c.scheduledId === scheduledId);
-    if (!course) return;
-
-    // Remove all instances of this course (all days)
-    const baseId = scheduledId.split('-').slice(0, -2).join('-');
-    const updatedCourses = scheduledCourses.filter(c => !c.scheduledId.startsWith(baseId));
-    
-    setScheduledCourses(updatedCourses);
-    checkConflicts(updatedCourses);
-  };
-
   const getCoursesForSlot = (day: string, hour: number) => {
     return scheduledCourses.filter(course => 
       course.day === day &&
@@ -225,19 +363,27 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
 
   const formatTime = (hour: number) => {
     const h = Math.floor(hour);
+    const minutes = hour % 1 === 0.5 ? 30 : 0;
     const isPM = h >= 12;
     const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h;
-    return `${displayHour}:00 ${isPM ? 'PM' : 'AM'}`;
+    return `${displayHour}:${minutes.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
   };
 
   const getCourseHeight = (course: ScheduledCourse) => {
     const duration = course.endTime - course.startTime;
-    return `${duration * 64}px`; // 64px per hour (h-16)
+    // Each 30-minute slot = 32px, each hour = 2 slots
+    // Add 1px buffer to ensure course extends fully to its ending time boundary
+    return `${duration * slotHeight * 2 + 30}px`;
   };
 
   const getCourseTop = (course: ScheduledCourse, hour: number) => {
     const offset = course.startTime - hour;
-    return `${offset * 64}px`; // 64px per hour
+    return `${offset * slotHeight * 2}px`;
+  };
+
+  const getGroupLabel = (code: string) => {
+    const match = code.match(/-\s*Group\s*(\d+)/i);
+    return match ? `Group ${match[1]}` : null;
   };
 
   return (
@@ -249,7 +395,7 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
           <p className="text-muted-foreground mt-1">
             {showSelection 
               ? 'Select courses to generate optimal schedules' 
-              : 'Drag courses from the table to build your schedule or auto-generate optimal schedules'
+              : 'Auto-generate optimal schedule combinations from your selected courses'
             }
           </p>
         </div>
@@ -301,7 +447,30 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
       {/* Course Selection Interface */}
       {showSelection && (
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Select Courses for Schedule Generation</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Select Courses for Schedule Generation</h3>
+            {uniqueCourses.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedCourses.size === uniqueCourses.length && uniqueCourses.length > 0}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      // Select all courses
+                      const allCodes = new Set(uniqueCourses.map(c => c.code.split(' - ')[0]));
+                      setSelectedCourses(allCodes);
+                    } else {
+                      // Deselect all courses
+                      setSelectedCourses(new Set());
+                    }
+                  }}
+                  id="select-all"
+                />
+                <Label htmlFor="select-all" className="cursor-pointer font-medium">
+                  Select All ({uniqueCourses.length} courses)
+                </Label>
+              </div>
+            )}
+          </div>
           {uniqueCourses.length === 0 ? (
             <p className="text-muted-foreground text-sm">
               No courses available. Please scrape courses first from the Scraper tab.
@@ -387,6 +556,29 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
               </Button>
             </div>
           </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {schedules.map((schedule, index) => {
+              const isActive = index === currentScheduleIndex;
+              const isAvailable = schedule.status === 'available';
+              const baseClasses = 'w-9 h-9 rounded-md border text-sm font-semibold transition-colors';
+              const stateClasses = isAvailable
+                ? 'border-green-600 bg-green-50 text-green-900'
+                : 'border-red-600 bg-red-50 text-red-900';
+              const activeClasses = isActive ? 'ring-2 ring-offset-2 ring-[var(--usc-green)]' : '';
+
+              return (
+                <button
+                  key={`schedule-box-${index}`}
+                  type="button"
+                  onClick={() => setCurrentScheduleIndex(index)}
+                  className={`${baseClasses} ${stateClasses} ${activeClasses}`}
+                  aria-label={`Schedule option ${index + 1}`}
+                >
+                  {index + 1}
+                </button>
+              );
+            })}
+          </div>
         </Card>
       )}
 
@@ -435,8 +627,8 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
             <div className="grid grid-cols-8">
               {/* Time Column */}
               <div className="border-r border-border">
-                {hours.map(hour => (
-                  <div key={hour} className="h-16 p-2 border-b border-border bg-muted">
+                {timeSlots.map((hour) => (
+                  <div key={hour} className="p-2 border-b border-border bg-muted" style={{ height: `${slotHeight}px` }}>
                     <span className="text-xs text-muted-foreground font-medium">
                       {formatTime(hour)}
                     </span>
@@ -447,19 +639,23 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
               {/* Day Columns */}
               {days.map(day => (
                 <div key={day} className="border-r border-border last:border-r-0">
-                  {hours.map(hour => {
+                  {timeSlots.map((hour) => {
                     const coursesInSlot = getCoursesForSlot(day, hour);
-                    const isFirstSlot = coursesInSlot.length > 0 && coursesInSlot[0].startTime === hour;
 
                     return (
                       <div
                         key={`${day}-${hour}`}
-                        className="h-16 border-b border-border hover:bg-muted/50 transition-colors relative"
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => handleDrop(day, hour)}
+                        className="border-b border-border relative"
+                        style={{ height: `${slotHeight}px` }}
                       >
-                        {isFirstSlot && coursesInSlot.map(course => {
+                        {coursesInSlot.map(course => {
+                          // Only render the course block at its starting time slot
+                          // Use small epsilon for floating point comparison
+                          if (Math.abs(course.startTime - hour) > 0.01) return null;
+
                           const hasConflict = conflicts.has(course.scheduledId);
+                          const baseCode = course.code.split(' - ')[0];
+                          const courseColor = courseColors.get(baseCode) || '#E2E8F0';
                           
                           return (
                             <div
@@ -467,24 +663,31 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
                               className={`absolute left-1 right-1 rounded-md p-2 shadow-sm border-l-4 ${
                                 hasConflict 
                                   ? 'bg-red-100 dark:bg-red-900/30 border-red-500 dark:border-red-400' 
-                                  : 'bg-green-50 dark:bg-green-900/20 border-[var(--usc-green)]'
+                                  : 'text-slate-900'
                               }`}
                               style={{
                                 height: getCourseHeight(course),
                                 top: getCourseTop(course, hour),
-                                zIndex: 10
+                                zIndex: 10,
+                                backgroundColor: hasConflict ? undefined : courseColor,
+                                borderLeftColor: hasConflict ? undefined : courseColor
                               }}
                             >
                               <div className="flex items-start justify-between gap-2 h-full">
                                 <div className="flex-1 min-w-0">
                                   <p className={`font-semibold text-xs truncate ${
-                                    hasConflict ? 'text-red-900 dark:text-red-200' : 'text-[var(--usc-green)]'
+                                    hasConflict ? 'text-red-900 dark:text-red-200' : 'text-slate-900'
                                   }`}>
                                     {course.code.split(' - ')[0]}
                                   </p>
                                   <p className="text-xs text-muted-foreground truncate mt-0.5">
                                     {course.room}
                                   </p>
+                                  {getGroupLabel(course.code) && (
+                                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                      {getGroupLabel(course.code)}
+                                    </p>
+                                  )}
                                   {hasConflict && (
                                     <div className="flex items-center gap-1 mt-1">
                                       <AlertTriangle className="w-3 h-3 text-red-600 dark:text-red-400" />
@@ -492,14 +695,6 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
                                     </div>
                                   )}
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-5 w-5 p-0 hover:bg-background/50"
-                                  onClick={() => handleRemove(course.scheduledId)}
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
                               </div>
                             </div>
                           );
@@ -524,8 +719,7 @@ export function ScheduleBuilder({ draggedCourse, courses }: ScheduleBuilderProps
             </div>
             <h3 className="text-lg font-semibold mb-2">No Schedules Generated</h3>
             <p className="text-muted-foreground text-sm">
-              Click "Auto-Generate Schedules" above to automatically create optimal schedule combinations,
-              or drag and drop courses from the data table to manually build your schedule.
+              Click "Auto-Generate Schedules" above to automatically create optimal schedule combinations.
             </p>
           </div>
         </Card>

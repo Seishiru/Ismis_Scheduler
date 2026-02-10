@@ -14,7 +14,6 @@ import "./styles/index.css";
 export default function App() {
   const [activeView, setActiveView] = useState('scraper');
   const [courses, setCourses] = useState<Course[]>([]);
-  const [draggedCourse, setDraggedCourse] = useState<Course | null>(null);
   const [isHoveringLeft, setIsHoveringLeft] = useState(false);
 
   const viewOrder = ['scraper', 'schedule', 'rooms', 'conflicts', 'settings', 'about'];
@@ -79,10 +78,6 @@ export default function App() {
     setActiveView('schedule'); // Auto-switch to schedule builder
   };
 
-  const handleDragStart = (course: Course) => {
-    setDraggedCourse(course);
-  };
-
   return (
     <div className="flex h-screen bg-background">
       <Toaster position="top-right" richColors />
@@ -97,7 +92,7 @@ export default function App() {
               <ScraperView onCoursesScraped={handleCoursesScraped} />
               {courses.length > 0 && (
                 <div className="mt-8">
-                  <DataTable courses={courses} onDragStart={handleDragStart} />
+                  <DataTable courses={courses} />
                 </div>
               )}
             </>
@@ -105,8 +100,8 @@ export default function App() {
 
           {activeView === 'schedule' && (
             <div className="space-y-8">
-              <ScheduleBuilder draggedCourse={draggedCourse} courses={courses} />
-              <DataTable courses={courses} onDragStart={handleDragStart} />
+              <ScheduleBuilder courses={courses} />
+              <DataTable courses={courses} />
             </div>
           )}
 
