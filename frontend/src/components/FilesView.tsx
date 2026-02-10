@@ -80,7 +80,8 @@ export function FilesView({ onSelectCourses, refreshTrigger = 0 }: FilesViewProp
           try {
             console.log('[FilesView] Auto-loading file:', newestFile.filename);
             const coursesResponse = await courseAPI.loadCoursesFromFile(newestFile.filename);
-            const scrapeType = newestFile.filename.toLowerCase().includes('all') ? 'all' : 'specific';
+            // Detect scrape type from filename suffix
+            const scrapeType = newestFile.filename.toLowerCase().includes('_all.json') ? 'all' : 'specific';
             console.log('[FilesView] Loaded', coursesResponse.courses.length, 'courses, type:', scrapeType);
             onSelectCourses(coursesResponse.courses, scrapeType, newestFile.filename);
             setLoadedFile(newestFile);
@@ -112,8 +113,8 @@ export function FilesView({ onSelectCourses, refreshTrigger = 0 }: FilesViewProp
       // Load the file data
       const response = await courseAPI.loadCoursesFromFile(selectedFile.filename);
       
-      // Determine scrape type based on filename
-      const scrapeType = selectedFile.filename.toLowerCase().includes('all') ? 'all' : 'specific';
+      // Determine scrape type based on filename suffix
+      const scrapeType = selectedFile.filename.toLowerCase().includes('_all.json') ? 'all' : 'specific';
       
       onSelectCourses(response.courses, scrapeType, selectedFile.filename);
       setLoadedFile(selectedFile);
@@ -234,7 +235,9 @@ export function FilesView({ onSelectCourses, refreshTrigger = 0 }: FilesViewProp
             {files.map((file) => {
               const isSelected = selectedFile?.filename === file.filename;
               const isLoaded = loadedFile?.filename === file.filename;
-              const courseCount = file.filename.toLowerCase().includes('all') ? 'All courses' : 'Specific courses';
+              const isAllCourses = file.filename.toLowerCase().includes('_all.json');
+              const scrapeTypeLabel = isAllCourses ? 'All Courses' : 'Specific Courses';
+              const scrapeTypeBadge = isAllCourses ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
               
               return (
                 <label
@@ -259,10 +262,14 @@ export function FilesView({ onSelectCourses, refreshTrigger = 0 }: FilesViewProp
 
                   {/* File Info */}
                   <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
                         <h3 className="font-semibold text-foreground">{file.filename}</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">{courseCount}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded ${scrapeTypeBadge}`}>
+                            {scrapeTypeLabel}
+                          </span>
+                        </div>
                       </div>
                       {isLoaded && (
                         <span className="text-xs font-bold text-[var(--usc-green)] bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded">

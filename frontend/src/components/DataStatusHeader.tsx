@@ -42,8 +42,8 @@ export function DataStatusHeader({ lastUpdated }: DataStatusHeaderProps) {
       <div className="flex items-center gap-2">
         <CheckCircle className={`w-5 h-5 ${isRecent ? 'text-green-600 dark:text-green-500' : 'text-orange-600 dark:text-orange-500'}`} />
         <p className={`text-sm ${isRecent ? 'text-green-700 dark:text-green-400' : 'text-orange-700 dark:text-orange-400'}`}>
-          Last updated: <span className="font-semibold">{timeString}</span>
-          {!isRecent && ` (${Math.floor(hoursAgo)} hours ago)`}
+          Course data loaded: <span className="font-semibold">{timeString}</span>
+          {!isRecent && ` (${Math.floor(hoursAgo)} hours ago - consider re-scraping for latest updates)`}
         </p>
       </div>
     </Card>

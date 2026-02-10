@@ -212,7 +212,10 @@ def scrape_task_worker(task_id: str, request_data: dict, scrape_type: str):
             "TRANSITION_SEMESTER": "Transition-Term"
         }
         period_name = period_map.get(request_data["academic_period"], "courses")
-        filename = os.path.join(JSON_DIR, f"{period_name}_{request_data['academic_year']}.json")
+        
+        # Include scrape type in filename to prevent overwriting
+        scrape_type_suffix = "_specific" if scrape_type == "specific" else "_all"
+        filename = os.path.join(JSON_DIR, f"{period_name}_{request_data['academic_year']}{scrape_type_suffix}.json")
         
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(courses_data, f, indent=2, ensure_ascii=False)
