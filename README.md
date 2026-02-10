@@ -110,7 +110,7 @@ ISMIS_Scheduler/
 
 ```bash
 cd backend
-python ismis_scheduler.py
+python api.py
 cd ..
 ```
 
