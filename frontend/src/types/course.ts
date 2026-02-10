@@ -41,6 +41,7 @@ export interface ScrapeSpecificRequest {
   courses: string[];
   academic_period: string;
   academic_year: string;
+  headless?: boolean;
 }
 
 export interface ScrapeAllRequest {
@@ -48,6 +49,7 @@ export interface ScrapeAllRequest {
   password: string;
   academic_period: string;
   academic_year: string;
+  headless?: boolean;
 }
 
 export interface ScrapeResponse {
@@ -66,6 +68,7 @@ export interface ScrapeStatus {
   current_task?: string;
   courses?: Course[];
   error?: string;
+  saved_file?: string;
 }
 
 export interface GenerateSchedulesRequest {
@@ -90,6 +93,7 @@ export interface CoursesResponse {
   courses: Course[];
   count: number;
   unique_codes: number;
+  last_updated?: string;
 }
 
 export interface JSONFile {

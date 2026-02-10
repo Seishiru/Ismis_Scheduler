@@ -18,9 +18,11 @@ interface ScheduledCourse extends Course {
 interface ScheduleBuilderProps {
   courses: Course[];
   selectedCoursesByCode?: Map<string, Course>;
+  scrapeType?: 'specific' | 'all' | null;
+  currentFilename?: string | null;
 }
 
-export function ScheduleBuilder({ courses, selectedCoursesByCode = new Map() }: ScheduleBuilderProps) {
+export function ScheduleBuilder({ courses, selectedCoursesByCode = new Map(), scrapeType, currentFilename }: ScheduleBuilderProps) {
   const [scheduledCourses, setScheduledCourses] = useState<ScheduledCourse[]>([]);
   const [conflicts, setConflicts] = useState<Set<string>>(new Set());
   const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set());
@@ -156,9 +158,11 @@ export function ScheduleBuilder({ courses, selectedCoursesByCode = new Map() }: 
 
     const courseCodes = Array.from(selectedCourses);
     
+    console.log('[ScheduleBuilder] Generating schedules with filename:', currentFilename);
     const success = await generateSchedules({
       course_codes: courseCodes,
       max_combinations: maxCombinations,
+      json_filename: currentFilename || undefined,
     });
 
     if (success && schedules && schedules.length > 0) {
@@ -418,6 +422,18 @@ export function ScheduleBuilder({ courses, selectedCoursesByCode = new Map() }: 
 
   return (
     <div className="space-y-6">
+      {/* Scrape Type Indicator - Floating Bubble */}
+      {scrapeType === 'all' && (
+        <div className="fixed top-8 right-8 z-50 animate-pulse">
+          <div className="bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400 dark:border-yellow-600 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">
+              Using All Courses Data
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -437,18 +453,25 @@ export function ScheduleBuilder({ courses, selectedCoursesByCode = new Map() }: 
             </div>
           )}
           {!showSelection ? (
-            <Button
-              onClick={() => setShowSelection(true)}
-              disabled={courses.length === 0}
-              className="gap-2"
-              style={{ 
-                backgroundColor: courses.length === 0 ? '#6b7280' : 'var(--usc-green)',
-                color: 'white'
-              }}
-            >
-              <Sparkles className="w-4 h-4" />
-              Auto-Generate Schedules
-            </Button>
+            <div className="flex flex-col items-end gap-2">
+              <Button
+                onClick={() => setShowSelection(true)}
+                disabled={courses.length === 0 || scrapeType === 'all'}
+                className="gap-2"
+                style={{ 
+                  backgroundColor: (courses.length === 0 || scrapeType === 'all') ? '#6b7280' : 'var(--usc-green)',
+                  color: 'white'
+                }}
+              >
+                <Sparkles className="w-4 h-4" />
+                Auto-Generate Schedules
+              </Button>
+              {scrapeType === 'all' && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 text-right max-w-xs">
+                  Not available with all courses data. Use Scraper to load your specific courses.
+                </p>
+              )}
+            </div>
           ) : (
             <div className="flex gap-2">
               <Button

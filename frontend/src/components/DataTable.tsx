@@ -4,8 +4,15 @@ import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Eye, EyeOff, Search } from 'lucide-react';
+import { Eye, EyeOff, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import type { Course } from '../types/course';
 
 interface DataTableProps {
@@ -40,6 +47,8 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
   const [searchQuery, setSearchQuery] = useState('');
   const [hideFullCourses, setHideFullCourses] = useState(false);
   const [hideDissolvedCourses, setHideDissolvedCourses] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   // Get the base course code (e.g., "CIS 2106N" from "CIS 2106N - Group 1")
   const getBaseCourseCode = (courseCode: string): string => {
@@ -90,6 +99,35 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
     });
   }, [filteredCourses, hideDissolvedCourses, hideFullCourses]);
 
+  // Pagination logic
+  const totalPages = Math.ceil(visibleCourses.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCourses = useMemo(() => {
+    return visibleCourses.slice(startIndex, endIndex);
+  }, [visibleCourses, startIndex, endIndex, itemsPerPage]);
+
+  // Reset to page 1 when filters change
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleHideFullChange = (checked: boolean) => {
+    setHideFullCourses(checked);
+    setCurrentPage(1);
+  };
+
+  const handleHideDissolvedChange = (checked: boolean) => {
+    setHideDissolvedCourses(checked);
+    setCurrentPage(1);
+  };
+
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(parseInt(value, 10));
+    setCurrentPage(1);
+  };
+
   return (
     <Card className="overflow-hidden">
       <div className="p-6 border-b border-gray-200 dark:border-gray-700" style={{ backgroundColor: 'var(--usc-green)' }}>
@@ -120,7 +158,7 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
               <Checkbox
                 id="hide-full-courses"
                 checked={hideFullCourses}
-                onCheckedChange={(checked) => setHideFullCourses(Boolean(checked))}
+                onCheckedChange={handleHideFullChange}
                 className="border-white/40"
               />
               <Label htmlFor="hide-full-courses" className="text-white/90 text-sm cursor-pointer">
@@ -129,7 +167,7 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
               <Checkbox
                 id="hide-dissolved-courses"
                 checked={hideDissolvedCourses}
-                onCheckedChange={(checked) => setHideDissolvedCourses(Boolean(checked))}
+                onCheckedChange={handleHideDissolvedChange}
                 className="border-white/40"
               />
               <Label htmlFor="hide-dissolved-courses" className="text-white/90 text-sm cursor-pointer">
@@ -156,7 +194,7 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
                 type="text"
                 placeholder="Search courses..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-9 w-64 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20"
               />
             </div>
@@ -188,7 +226,7 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
             </TableRow>
           </TableHeader>
           <TableBody>
-            {visibleCourses.length === 0 ? (
+            {paginatedCourses.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={showDetailedView ? 8 : 5} className="text-center text-muted-foreground py-8">
                   {courses.length === 0 
@@ -198,7 +236,7 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
                 </TableCell>
               </TableRow>
             ) : (
-              visibleCourses.map((course, index) => {
+              paginatedCourses.map((course, index) => {
                 const availability = getCourseAvailability(course);
                 const statusStyles = {
                   available: 'bg-green-200 border-black',
@@ -282,6 +320,56 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination Controls */}
+      {visibleCourses.length > 0 && (
+        <div className="flex items-center justify-between gap-4 p-4 border-t border-gray-200 dark:border-gray-700 bg-muted/50">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="items-per-page" className="text-sm">
+              Items per page:
+            </Label>
+            <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+              <SelectTrigger id="items-per-page" className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages} • Showing {paginatedCourses.length} of {visibleCourses.length} courses
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="gap-1"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="gap-1"
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

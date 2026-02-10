@@ -1,4 +1,4 @@
-import { Database, Calendar, AlertTriangle, Settings, Info, DoorOpen } from 'lucide-react';
+import { Database, Calendar, Settings, Info, DoorOpen, FileJson } from 'lucide-react';
 
 interface SidebarProps {
   activeView: string;
@@ -8,9 +8,9 @@ interface SidebarProps {
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const menuItems = [
     { id: 'scraper', label: 'Scraper', icon: Database },
+    { id: 'files', label: 'Saved Files', icon: FileJson },
     { id: 'schedule', label: 'Schedule Builder', icon: Calendar },
     { id: 'rooms', label: 'Available Rooms', icon: DoorOpen },
-    { id: 'conflicts', label: 'My Conflicts', icon: AlertTriangle },
     { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'about', label: 'About', icon: Info },
   ];

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card } from './ui/card';
-import { DoorOpen, Clock, MapPin, Search } from 'lucide-react';
+import { DoorOpen, Clock, MapPin, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from './ui/button';
 import type { Course } from '../types/course';
 
 interface AvailableRoomsViewProps {
@@ -21,6 +22,8 @@ export function AvailableRoomsView({ courses }: AvailableRoomsViewProps) {
   const [selectedDay, setSelectedDay] = useState<string>('Monday');
   const [selectedTime, setSelectedTime] = useState<string>('09:00');
   const [searchRoom, setSearchRoom] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [roomsPerPage, setRoomsPerPage] = useState(12);
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const timeSlots = [
@@ -153,6 +156,28 @@ export function AvailableRoomsView({ courses }: AvailableRoomsViewProps) {
   const availableRooms = getAvailableRooms();
   const allRooms = getAllRooms();
 
+  // Pagination logic
+  const totalPages = Math.ceil(availableRooms.length / roomsPerPage);
+  const startIndex = (currentPage - 1) * roomsPerPage;
+  const endIndex = startIndex + roomsPerPage;
+  const paginatedRooms = availableRooms.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  const handleDayChange = (value: string) => {
+    setSelectedDay(value);
+    setCurrentPage(1);
+  };
+
+  const handleTimeChange = (value: string) => {
+    setSelectedTime(value);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchRoom(value);
+    setCurrentPage(1);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -171,7 +196,7 @@ export function AvailableRoomsView({ courses }: AvailableRoomsViewProps) {
             <label className="block text-sm font-medium mb-2">Day</label>
             <select
               value={selectedDay}
-              onChange={(e) => setSelectedDay(e.target.value)}
+              onChange={(e) => handleDayChange(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
             >
               {days.map(day => (
@@ -185,7 +210,7 @@ export function AvailableRoomsView({ courses }: AvailableRoomsViewProps) {
             <label className="block text-sm font-medium mb-2">Time</label>
             <select
               value={selectedTime}
-              onChange={(e) => setSelectedTime(e.target.value)}
+              onChange={(e) => handleTimeChange(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
             >
               {timeSlots.map(time => (
@@ -202,7 +227,7 @@ export function AvailableRoomsView({ courses }: AvailableRoomsViewProps) {
               <input
                 type="text"
                 value={searchRoom}
-                onChange={(e) => setSearchRoom(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="e.g., GLE, NGE, etc."
                 className="w-full pl-10 pr-3 py-2 border border-border rounded-lg bg-background text-foreground"
               />
@@ -235,27 +260,60 @@ export function AvailableRoomsView({ courses }: AvailableRoomsViewProps) {
             </div>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {availableRooms.map(({ room, nextOccupied }) => (
-              <Card key={room} className="p-4 hover:shadow-md transition-shadow border-l-4 border-l-green-600 dark:border-l-green-400">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-green-600 dark:text-green-400" />
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              {paginatedRooms.map(({ room, nextOccupied }) => (
+                <Card key={room} className="p-4 hover:shadow-md transition-shadow border-l-4 border-l-green-600 dark:border-l-green-400">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <MapPin className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{room}</h3>
+                        <p className="text-xs text-green-600 dark:text-green-400">Available</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold">{room}</h3>
-                      <p className="text-xs text-green-600 dark:text-green-400">Available</p>
-                    </div>
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
                   </div>
-                  <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="w-4 h-4" />
+                    <span>Until: {nextOccupied}</span>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {availableRooms.length > roomsPerPage && (
+              <div className="flex items-center justify-center gap-4 p-4 bg-muted/50 rounded-lg border">
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages} • Showing {paginatedRooms.length} of {availableRooms.length} rooms
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="gap-1"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="gap-1"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  <span>Until: {nextOccupied}</span>
-                </div>
-              </Card>
-            ))}
+              </div>
+            )}
           </div>
         )}
       </div>

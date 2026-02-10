@@ -71,6 +71,9 @@ export function useScraper() {
       setProgress(null);
 
       try {
+        // Get headless mode from localStorage
+        const headless = localStorage.getItem('scraper_headless') !== 'false';
+        
         // Build request with provided fields
         const request: ScrapeSpecificRequest = {
           username,
@@ -78,6 +81,7 @@ export function useScraper() {
           courses,
           academic_period: academicPeriod as any,
           academic_year: academicYear,
+          headless,
         };
 
         // Start scraping task
@@ -134,12 +138,16 @@ export function useScraper() {
       setProgress(null);
 
       try {
+        // Get headless mode from localStorage
+        const headless = localStorage.getItem('scraper_headless') !== 'false';
+        
         // Build request with provided fields
         const request: ScrapeAllRequest = {
           username,
           password,
           academic_period: academicPeriod as any,
           academic_year: academicYear,
+          headless,
         };
 
         const startResponse = await courseAPI.scrapeAllCourses(request);

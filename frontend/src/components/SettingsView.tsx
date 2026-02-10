@@ -4,46 +4,57 @@ import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export function SettingsView() {
-  // ISMIS Credentials
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  // Scraper Settings - Load from localStorage
+  const [headlessMode, setHeadlessMode] = useState(() => {
+    const saved = localStorage.getItem('scraper_headless');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const [politeDelay, setPoliteDelay] = useState(() => localStorage.getItem('scraper_polite_delay') || '0.6');
 
-  // Academic Period
-  const [period, setPeriod] = useState('second');
-  const [year, setYear] = useState('2025');
+  // Display Settings - Load from localStorage
+  const [showConflicts, setShowConflicts] = useState(() => {
+    const saved = localStorage.getItem('display_show_conflicts');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const [use24Hour, setUse24Hour] = useState(() => {
+    const saved = localStorage.getItem('display_24hour');
+    return saved !== null ? saved === 'true' : false;
+  });
+  const [theme, setTheme] = useState(() => localStorage.getItem('display_theme') || 'light');
 
-  // Scraper Settings
-  const [headlessMode, setHeadlessMode] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(false);
-  const [politeDelay, setPoliteDelay] = useState('0.6');
-
-  // Display Settings
-  const [showConflicts, setShowConflicts] = useState(true);
-  const [use24Hour, setUse24Hour] = useState(false);
-  const [theme, setTheme] = useState('light');
-
-  const handleSaveCredentials = () => {
-    if (!username || !password) {
-      toast.error('Please enter both username and password');
-      return;
+  // Apply theme on mount
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (theme === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else if (theme === 'auto') {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
-    // In a real app, this would securely save credentials
-    toast.success('ISMIS credentials saved successfully');
-  };
-
-  const handleUpdateAcademicPeriod = () => {
-    toast.success('Academic period updated successfully');
-  };
+  }, []);
 
   const handleUpdateScraperSettings = () => {
+    // Save scraper settings to localStorage
+    localStorage.setItem('scraper_headless', String(headlessMode));
+    localStorage.setItem('scraper_polite_delay', politeDelay);
     toast.success('Scraper settings updated successfully');
   };
 
   const handleUpdateDisplaySettings = () => {
+    // Save display settings to localStorage
+    localStorage.setItem('display_show_conflicts', String(showConflicts));
+    localStorage.setItem('display_24hour', String(use24Hour));
+    localStorage.setItem('display_theme', theme);
+    
     toast.success('Display settings updated successfully');
     
     // Apply theme
@@ -65,19 +76,20 @@ export function SettingsView() {
     window.dispatchEvent(new CustomEvent('themeChange', { detail: { theme } }));
   };
 
-  const handleExportSchedule = () => {
-    toast.success('Schedule exported as JSON');
-    // In a real app, this would trigger a download
-  };
-
-  const handleImportCourseData = () => {
-    toast.info('File picker would open here');
-    // In a real app, this would open a file picker
-  };
-
   const handleClearAllData = () => {
     if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+      // Clear all localStorage data
+      localStorage.clear();
+      
+      // Clear all sessionStorage data
+      sessionStorage.clear();
+      
       toast.success('All data cleared successfully');
+      
+      // Reload the page to reset the application state
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     }
   };
 
@@ -89,85 +101,6 @@ export function SettingsView() {
         <p className="text-muted-foreground mt-1">Configure your course schedule optimizer preferences</p>
       </div>
 
-      {/* ISMIS Credentials */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">USC ISMIS Credentials</h3>
-        <div className="space-y-4 max-w-md">
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input 
-              id="username" 
-              placeholder="Enter your ISMIS username" 
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              placeholder="Enter your ISMIS password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <Button 
-            className="w-full"
-            style={{ backgroundColor: 'var(--usc-green)', color: 'white' }}
-            onClick={handleSaveCredentials}
-          >
-            Save Credentials
-          </Button>
-        </div>
-      </Card>
-
-      {/* Academic Period */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Academic Period</h3>
-        <div className="space-y-4 max-w-md">
-          <div className="space-y-2">
-            <Label htmlFor="period">Academic Period</Label>
-            <Select 
-              defaultValue="second"
-              value={period}
-              onValueChange={(value) => setPeriod(value)}
-            >
-              <SelectTrigger id="period">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="first">1st Semester</SelectItem>
-                <SelectItem value="second">2nd Semester</SelectItem>
-                <SelectItem value="summer">Summer</SelectItem>
-                <SelectItem value="first-tri">1st Trimester</SelectItem>
-                <SelectItem value="second-tri">2nd Trimester</SelectItem>
-                <SelectItem value="third-tri">3rd Trimester</SelectItem>
-                <SelectItem value="transition">Transition Term</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="year">Academic Year</Label>
-            <Input 
-              id="year" 
-              type="number" 
-              defaultValue="2025" 
-              placeholder="2025" 
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-            />
-          </div>
-          <Button 
-            className="w-full"
-            style={{ backgroundColor: 'var(--usc-green)', color: 'white' }}
-            onClick={handleUpdateAcademicPeriod}
-          >
-            Update Academic Period
-          </Button>
-        </div>
-      </Card>
-
       {/* Scraper Settings */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Scraper Settings</h3>
@@ -177,27 +110,21 @@ export function SettingsView() {
               <Label>Headless Mode</Label>
               <p className="text-sm text-muted-foreground">Run browser in background (faster)</p>
             </div>
-            <Switch 
-              defaultChecked={headlessMode}
-              onCheckedChange={(checked) => setHeadlessMode(checked)}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Auto-refresh Data</Label>
-              <p className="text-sm text-muted-foreground">Automatically update course data</p>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-muted-foreground min-w-[40px]">
+                {headlessMode ? 'true' : 'false'}
+              </span>
+              <Switch 
+                checked={headlessMode}
+                onCheckedChange={(checked) => setHeadlessMode(checked)}
+              />
             </div>
-            <Switch 
-              defaultChecked={autoRefresh}
-              onCheckedChange={(checked) => setAutoRefresh(checked)}
-            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="delay">Polite Delay (seconds)</Label>
             <Input 
               id="delay" 
               type="number" 
-              defaultValue="0.6" 
               step="0.1"
               min="0.1"
               max="5"
@@ -228,36 +155,9 @@ export function SettingsView() {
               <p className="text-sm text-muted-foreground">Highlight overlapping courses</p>
             </div>
             <Switch 
-              defaultChecked={showConflicts}
+              checked={showConflicts}
               onCheckedChange={(checked) => setShowConflicts(checked)}
             />
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>24-Hour Time Format</Label>
-              <p className="text-sm text-muted-foreground">Use 24-hour clock in schedule</p>
-            </div>
-            <Switch 
-              defaultChecked={use24Hour}
-              onCheckedChange={(checked) => setUse24Hour(checked)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="theme">Theme</Label>
-            <Select 
-              defaultValue="light"
-              value={theme}
-              onValueChange={(value) => setTheme(value)}
-            >
-              <SelectTrigger id="theme">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="auto">Auto</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
           <Button 
             className="w-full"
@@ -273,20 +173,6 @@ export function SettingsView() {
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Data Management</h3>
         <div className="space-y-3 max-w-md">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={handleExportSchedule}
-          >
-            Export Schedule as JSON
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={handleImportCourseData}
-          >
-            Import Course Data
-          </Button>
           <Button 
             variant="outline" 
             className="w-full justify-start text-red-600 hover:text-red-700"

@@ -63,6 +63,7 @@ class ScrapeSpecificRequest(BaseModel):
     courses: List[str] = Field(..., min_items=1)
     academic_period: str
     academic_year: str
+    headless: bool = True
 
 
 class ScrapeAllRequest(BaseModel):
@@ -71,6 +72,7 @@ class ScrapeAllRequest(BaseModel):
     password: str
     academic_period: str
     academic_year: str
+    headless: bool = True
 
 
 class ScrapeResponse(BaseModel):
@@ -89,6 +91,7 @@ class ScrapeStatus(BaseModel):
     current_task: Optional[str] = None
     courses: Optional[List[Course]] = None
     error: Optional[str] = None
+    saved_file: Optional[str] = None
 
 
 class GenerateSchedulesRequest(BaseModel):
@@ -117,6 +120,7 @@ class CoursesResponse(BaseModel):
     courses: List[Course]
     count: int
     unique_codes: int
+    last_updated: Optional[str] = None
 
 
 class ErrorResponse(BaseModel):

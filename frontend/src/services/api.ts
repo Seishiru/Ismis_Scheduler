@@ -158,6 +158,14 @@ export const courseAPI = {
   },
 
   /**
+   * Get cached courses (instant loading, no scraping)
+   */
+  async getCachedCourses(): Promise<CoursesResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/courses/cached`);
+    return handleResponse<CoursesResponse>(response);
+  },
+
+  /**
    * Generate schedule combinations
    */
   async generateSchedules(
@@ -177,6 +185,14 @@ export const courseAPI = {
   async getAvailableFiles(): Promise<AvailableFilesResponse> {
     const response = await fetch(`${API_BASE_URL}/api/schedules/available`);
     return handleResponse<AvailableFilesResponse>(response);
+  },
+
+  /**
+   * Load courses from a specific file
+   */
+  async loadCoursesFromFile(filename: string): Promise<CoursesResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/schedules/load/${encodeURIComponent(filename)}`);
+    return handleResponse<CoursesResponse>(response);
   },
 };
 

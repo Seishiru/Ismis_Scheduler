@@ -1,7 +1,5 @@
 import { Card } from './ui/card';
-import { Github, Mail, Heart, Code } from 'lucide-react';
-// TODO: Add GCash QR code image to public folder
-// import gcashQR from '/path/to/gcash-qr.png';
+import { Github, Mail, Heart } from 'lucide-react';
 
 export function AboutView() {
   return (
@@ -9,25 +7,63 @@ export function AboutView() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-semibold">About</h1>
-        <p className="text-muted-foreground mt-1">Meet the creator and support the project</p>
+        <p className="text-muted-foreground mt-1">Learn about the tool and support the project</p>
       </div>
+
+      {/* What is this tool? */}
+      <Card className="p-8">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-2xl font-semibold mb-4 text-center">What is USC Course Scheduler?</h2>
+          <p className="text-muted-foreground mb-4 text-center">
+            A simple and powerful tool that makes creating your class schedule easier and faster!
+          </p>
+          
+          <div className="space-y-4 mt-6">
+            <div className="p-4 bg-muted rounded-lg">
+              <h3 className="font-semibold mb-2">📚 For Students</h3>
+              <p className="text-sm text-muted-foreground">
+                Stop manually writing down course schedules! This tool automatically retrieves all available courses 
+                from ISMIS and helps you build your ideal schedule. It warns you when classes overlap, 
+                shows which rooms are free, and makes planning your semester a breeze.
+              </p>
+            </div>
+
+            <div className="p-4 bg-muted rounded-lg">
+              <h3 className="font-semibold mb-2">👨‍🏫 For Teachers & Staff</h3>
+              <p className="text-sm text-muted-foreground">
+                Quickly view all course offerings, check room availability, and see the complete schedule 
+                at a glance. No more switching between multiple ISMIS pages – everything you need is in one place.
+              </p>
+            </div>
+
+            <div className="p-4 bg-muted rounded-lg">
+              <h3 className="font-semibold mb-2">✨ Key Features</h3>
+              <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                <li>Automatically fetch course data from ISMIS with one click</li>
+                <li>Visual calendar showing when and where each class meets</li>
+                <li>Instant warnings when courses have time conflicts</li>
+                <li>See available rooms by day and time</li>
+                <li>Choose which sections work best for your schedule</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* Creator Info */}
       <Card className="p-8">
         <div className="flex flex-col items-center text-center max-w-2xl mx-auto">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--usc-green)] to-[var(--usc-green-light)] flex items-center justify-center mb-6">
-            <Code className="w-12 h-12 text-white" />
+          <div className="w-24 h-24 rounded-full overflow-hidden mb-6 border-4 border-[var(--usc-green)]">
+            <img 
+              src="/Green-hair-guy.png" 
+              alt="Cecil Quibranza" 
+              className="w-full h-full object-cover"
+            />
           </div>
           
-          <h2 className="text-2xl font-semibold mb-2">USC Course Schedule Optimizer</h2>
-          <p className="text-muted-foreground mb-6">
-            A powerful web application designed to help USC students efficiently scrape course data 
-            and build their ideal class schedules with automatic conflict detection.
-          </p>
-
           <div className="w-full border-t border-border pt-6 mb-6">
             <h3 className="text-lg font-semibold mb-4">Created by</h3>
-            <p className="mb-2">Cecil Quibranza</p>
+            <p className="mb-2 text-lg">Cecil Quibranza</p>
             <p className="text-sm text-muted-foreground mb-4">Computer Science Student, USC San Carlos</p>
           </div>
 
@@ -42,8 +78,8 @@ export function AboutView() {
               <p className="text-sm text-muted-foreground">Modern UI with Tailwind</p>
             </div>
             <div className="p-4 bg-muted rounded-lg">
-              <p className="font-semibold mb-1">Drag & Drop</p>
-              <p className="text-sm text-muted-foreground">Intuitive schedule builder</p>
+              <p className="font-semibold mb-1">Course Selection</p>
+              <p className="text-sm text-muted-foreground">Interactive schedule builder</p>
             </div>
             <div className="p-4 bg-muted rounded-lg">
               <p className="font-semibold mb-1">Smart Detection</p>
@@ -89,11 +125,12 @@ export function AboutView() {
 
           <div className="flex flex-col items-center space-y-4">
             {/* QR Code */}
-            <div className="w-64 h-64 border-2 border-border rounded-lg flex flex-col items-center justify-center bg-muted">
-              {/* TODO: Add your GCash QR code image */}
-              <div className="flex items-center justify-center text-muted-foreground text-sm p-4 text-center">
-                <p>Add your GCash QR code image here</p>
-              </div>
+            <div className="w-64 h-64 rounded-lg overflow-hidden border-2 border-border">
+              <img 
+                src="/QR.png" 
+                alt="GCash QR Code" 
+                className="w-full h-full object-cover"
+              />
             </div>
             
             <div className="text-center">

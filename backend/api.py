@@ -95,13 +95,20 @@ def load_courses_from_file(filename: Optional[str] = None) -> List[Dict]:
     """Load courses from JSON file"""
     if filename is None:
         filename = get_latest_courses_file()
+    elif not os.path.isabs(filename):
+        # If filename is not an absolute path, assume it's in JSON_DIR
+        filename = os.path.join(JSON_DIR, filename)
     
     if filename is None or not os.path.exists(filename):
+        print(f"[ERROR] File not found: {filename}")
         return []
     
     try:
+        print(f"[INFO] Loading courses from: {filename}")
         with open(filename, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            data = json.load(f)
+        print(f"[INFO] Loaded {len(data)} courses")
+        return data
     except Exception as e:
         print(f"Error loading courses: {e}")
         return []
@@ -126,9 +133,12 @@ def scrape_task_worker(task_id: str, request_data: dict, scrape_type: str):
         
         courses_data = []
         
+        # Get headless mode from request, default to True if not specified
+        headless_mode = request_data.get("headless", True)
+        
         with sync_playwright() as p:
-            # Launch browser
-            browser = p.chromium.launch(headless=True)
+            # Launch browser with headless mode from settings
+            browser = p.chromium.launch(headless=headless_mode)
             page = browser.new_page()
             setup_page_optimizations(page)
             
@@ -207,10 +217,13 @@ def scrape_task_worker(task_id: str, request_data: dict, scrape_type: str):
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(courses_data, f, indent=2, ensure_ascii=False)
         
+        print(f"[SCRAPE SUCCESS] Saved {len(courses_data)} courses to {filename}")
+        
         # Update status to completed
         scraping_tasks[task_id].status = "completed"
         scraping_tasks[task_id].current_task = "Done!"
         scraping_tasks[task_id].courses = [Course(**c) for c in courses_data]
+        scraping_tasks[task_id].saved_file = os.path.basename(filename)  # Store the filename
         
     except Exception as e:
         scraping_tasks[task_id].status = "failed"
@@ -321,7 +334,7 @@ async def scrape_specific_courses(
     background_tasks.add_task(
         scrape_task_worker,
         task_id,
-        request.dict(),
+        request.model_dump(),
         "specific"
     )
     
@@ -351,7 +364,7 @@ async def scrape_all_courses(
     background_tasks.add_task(
         scrape_task_worker,
         task_id,
-        request.dict(),
+        request.model_dump(),
         "all"
     )
     
@@ -392,14 +405,55 @@ async def get_courses(filename: Optional[str] = None):
     )
 
 
+@app.get("/api/courses/cached", response_model=CoursesResponse)
+async def get_cached_courses():
+    """Get the most recently cached courses (instant load, no scraping required)"""
+    courses_data = load_courses_from_file()
+    
+    last_updated = None
+    
+    if courses_data:
+        # Get the file's modification time
+        json_file = get_latest_courses_file()
+        if json_file and os.path.exists(json_file):
+            try:
+                mod_time = os.path.getmtime(json_file)
+                last_updated = datetime.fromtimestamp(mod_time).isoformat()
+            except Exception:
+                pass
+        
+        # Count unique course codes (without group numbers)
+        unique_codes = set()
+        for course in courses_data:
+            code = course.get("code", "").split(" - Group")[0]
+            unique_codes.add(code)
+        
+        return CoursesResponse(
+            courses=[Course(**c) for c in courses_data],
+            count=len(courses_data),
+            unique_codes=len(unique_codes),
+            last_updated=last_updated
+        )
+    
+    return CoursesResponse(
+        courses=[],
+        count=0,
+        unique_codes=0,
+        last_updated=None
+    )
+
+
 @app.post("/api/schedules/generate", response_model=GenerateSchedulesResponse)
 async def generate_schedules(request: GenerateSchedulesRequest):
     """Generate schedule combinations from selected courses"""
     try:
+        print(f"\n[SCHEDULE GENERATE] Request: {request.course_codes}, filename: {request.json_filename}")
+        
         # Load courses
         courses_data = load_courses_from_file(request.json_filename)
         
         if not courses_data:
+            print(f"[ERROR] No courses data found for filename: {request.json_filename}")
             raise HTTPException(status_code=404, detail="No courses data found")
         
         print(f"\n{'='*70}")
@@ -447,24 +501,38 @@ async def generate_schedules(request: GenerateSchedulesRequest):
         start_time = time.time()
         # Enable debug if no results expected
         debug_mode = len(selected_dict) > 1
-        combinations_raw = generate_schedule_combinations(
-            selected_dict,
-            max_combinations=request.max_combinations,
-            debug=debug_mode
-        )
+        
+        try:
+            combinations_raw = generate_schedule_combinations(
+                selected_dict,
+                max_combinations=request.max_combinations,
+                debug=debug_mode
+            )
+        except Exception as e:
+            print(f"[ERROR] generate_schedule_combinations failed: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise
         
         print(f"\n[RESULT] ✓ Generated {len(combinations_raw)} valid combinations")
         print(f"{'='*70}\n")
         
         # Add status to each combination and ensure no conflicts
         combinations = []
-        for combo in combinations_raw:
-            status_info = get_schedule_status(combo)
-            combinations.append(ScheduleCombination(
-                courses=[Course(**c) for c in combo],
-                status=status_info["status"],
-                full_courses=status_info["full_courses"]
-            ))
+        for i, combo in enumerate(combinations_raw):
+            try:
+                status_info = get_schedule_status(combo)
+                combinations.append(ScheduleCombination(
+                    courses=[Course(**c) for c in combo],
+                    status=status_info["status"],
+                    full_courses=status_info["full_courses"]
+                ))
+            except Exception as e:
+                print(f"[ERROR] Failed to process combination {i}: {str(e)}")
+                print(f"[DEBUG] Combo data: {combo}")
+                import traceback
+                traceback.print_exc()
+                raise
         
         elapsed = time.time() - start_time
         
@@ -479,7 +547,12 @@ async def generate_schedules(request: GenerateSchedulesRequest):
             count=len(combinations)
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
+        import traceback
+        print(f"[ERROR] Schedule generation failed: {str(e)}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -487,7 +560,9 @@ async def generate_schedules(request: GenerateSchedulesRequest):
 async def get_available_json_files():
     """Get list of available JSON course files"""
     try:
+        print(f"[FILES] Looking for JSON files in: {JSON_DIR}")
         json_files = [f for f in os.listdir(JSON_DIR) if f.endswith('.json')]
+        print(f"[FILES] Found {len(json_files)} files: {json_files}")
         files_info = []
         
         for filename in json_files:
@@ -503,10 +578,50 @@ async def get_available_json_files():
         # Sort by modification time (newest first)
         files_info.sort(key=lambda x: x["modified"], reverse=True)
         
+        print(f"[FILES] Returning {len(files_info)} file(s)")
         return {
             "files": files_info,
             "count": len(files_info)
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/schedules/load/{filename}")
+async def load_courses_file_endpoint(filename: str):
+    """Load courses from a specific JSON file"""
+    try:
+        # Security: prevent directory traversal
+        if ".." in filename or "/" in filename or "\\" in filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+        
+        filepath = os.path.join(JSON_DIR, filename)
+        
+        # Check if file exists
+        if not os.path.exists(filepath) or not filepath.endswith('.json'):
+            raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+        
+        # Read and parse the JSON file
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        # Extract courses data
+        courses = data.get('courses', []) if isinstance(data, dict) else data
+        if not isinstance(courses, list):
+            courses = []
+        
+        # Get file modification time
+        stat = os.stat(filepath)
+        last_updated = datetime.fromtimestamp(stat.st_mtime).isoformat()
+        
+        return CoursesResponse(
+            courses=courses,
+            count=len(courses),
+            unique_codes=len(set(c.get('code', '').split(' - ')[0] for c in courses if isinstance(c, dict) and c.get('code'))),
+            last_updated=last_updated
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

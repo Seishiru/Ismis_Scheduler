@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, Square, CheckCircle, Database, Mail, Lock } from 'lucide-react';
+import { Play, Square, CheckCircle, Database, Mail, Lock, Zap, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Input } from './ui/input';
@@ -16,15 +16,31 @@ import courseAPI from '../services/api';
 import type { Course, AcademicOptions } from '../types/course';
 
 interface ScraperViewProps {
-  onCoursesScraped: (courses: Course[]) => void;
+  onCoursesScraped: (courses: Course[], timestamp?: string, scrapeType?: 'specific' | 'all', savedFilename?: string) => void;
+  onManualScrape?: () => void;
 }
 
-export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
-  const [email, setEmail] = useState(() => sessionStorage.getItem('ismis_email') || '');
-  const [password, setPassword] = useState('');
+export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewProps) {
+  // Load credentials from localStorage (Settings) or sessionStorage (previous scraper session)
+  const [email, setEmail] = useState(() => {
+    return sessionStorage.getItem('ismis_email') || 
+           localStorage.getItem('ismis_username') || '';
+  });
+  const [password, setPassword] = useState(() => {
+    return localStorage.getItem('ismis_password') || '';
+  });
   const [courseCodes, setCourseCodes] = useState('');
-  const [academicPeriod, setAcademicPeriod] = useState(() => sessionStorage.getItem('ismis_academic_period') || '');
-  const [academicYear, setAcademicYear] = useState(() => sessionStorage.getItem('ismis_academic_year') || '');
+  
+  // Load academic period from localStorage (Settings) or sessionStorage
+  const [academicPeriod, setAcademicPeriod] = useState(() => {
+    return sessionStorage.getItem('ismis_academic_period') || 
+           localStorage.getItem('ismis_period') || '';
+  });
+  const [academicYear, setAcademicYear] = useState(() => {
+    return sessionStorage.getItem('ismis_academic_year') || 
+           localStorage.getItem('ismis_year') || '';
+  });
+  
   const [options, setOptions] = useState<AcademicOptions | null>(() => {
     const stored = sessionStorage.getItem('ismis_options');
     return stored ? JSON.parse(stored) : null;
@@ -32,21 +48,26 @@ export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('ismis_logged_in') === 'true');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [currentScrapeType, setCurrentScrapeType] = useState<'specific' | 'all' | null>(null);
   
   const { scrapeAll, scrapeSpecific, status, isPolling, cancelPolling } = useScraper();
 
-  // Load static options on mount as fallback
-  useEffect(() => {
-    const loadOptions = async () => {
-      try {
-        const data = await courseAPI.getAcademicOptions();
-        console.log('Loaded fallback academic options:', data);
-      } catch (err) {
-        console.error('Failed to load academic options:', err);
-      }
-    };
-    loadOptions();
-  }, []);
+  // Don't auto-load cached data - let user select from Files tab
+  // useEffect(() => {
+  //   const loadCachedData = async () => {
+  //     try {
+  //       const response = await courseAPI.getCachedCourses();
+  //       if (response.courses.length > 0) {
+  //         setCachedCourses(response.courses);
+  //         onCoursesScraped(response.courses, response.last_updated);
+  //       }
+  //     } catch (err) {
+  //       console.error('Failed to load cached courses:', err);
+  //     }
+  //   };
+    
+  //   loadCachedData();
+  // }, [onCoursesScraped]);
 
   // Handle login and fetch real options
   const handleLogin = async () => {
@@ -116,10 +137,16 @@ export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
 
   // Notify parent when scraping completes
   useEffect(() => {
-    if (status?.status === 'completed' && status?.courses) {
-      onCoursesScraped(status.courses);
+    if (status?.status === 'completed' && status?.courses && status.courses.length > 0) {
+      console.log('[ScraperView] Scraping completed! Courses:', status.courses.length);
+      console.log('[ScraperView] Saved file:', status.saved_file);
+      // Get timestamp from completed scrape
+      const courses = status.courses as Course[];
+      const timestamp = new Date().toISOString();
+      console.log('[ScraperView] Calling onCoursesScraped with', courses.length, 'courses');
+      onCoursesScraped(courses, timestamp, currentScrapeType || 'all', status.saved_file);
     }
-  }, [status, onCoursesScraped]);
+  }, [status, onCoursesScraped, currentScrapeType]);
 
   const handleScrapeAll = async () => {
     if (!email || !password) {
@@ -132,6 +159,8 @@ export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
       return;
     }
 
+    onManualScrape?.();
+    setCurrentScrapeType('all');
     await scrapeAll(email, password, academicPeriod, academicYear);
   };
 
@@ -151,6 +180,8 @@ export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
       return;
     }
 
+    onManualScrape?.();
+    setCurrentScrapeType('specific');
     const codes = courseCodes.split(',').map(c => c.trim()).filter(Boolean);
     await scrapeSpecific(email, password, codes, academicPeriod, academicYear);
   };
@@ -180,6 +211,19 @@ export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
         <h1 className="text-3xl font-semibold">Course Scraper</h1>
         <p className="text-muted-foreground mt-1">Scrape course data from USC ISMIS</p>
       </div>
+
+      {/* Info Card */}
+      <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+        <div className="space-y-2 text-sm text-blue-900 dark:text-blue-300">
+          <p className="font-semibold">ℹ️ How to use the Scraper:</p>
+          <ol className="list-decimal list-inside space-y-1">
+            <li>Enter your USC ISMIS credentials and select an academic period</li>
+            <li>Choose "Scrape All Courses" to get all campus courses, or "Scrape Specific Courses" for your courses</li>
+            <li>Your scraped data will be saved as a new file in Saved Files</li>
+            <li>Go to <span className="font-semibold">Saved Files</span> tab to load and switch between different datasets</li>
+          </ol>
+        </div>
+      </Card>
 
       {!isLoggedIn ? (
         /* Login Card */
@@ -427,21 +471,98 @@ export function ScraperView({ onCoursesScraped }: ScraperViewProps) {
       {/* Progress Details */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Progress Details</h3>
-        <div className="bg-muted rounded-lg p-4 h-64 overflow-y-auto font-mono text-sm space-y-1">
+        <div className="bg-muted rounded-lg p-4 h-64 overflow-y-auto font-mono text-sm space-y-1 flex flex-col">
           {!currentTask && progress === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No active scraping. Start scraping to see progress.</p>
-          ) : (
-            <div className="space-y-2">
-              <p className="text-gray-900 dark:text-white/90">
-                <span className="text-yellow-500 dark:text-yellow-400">▶</span> Current Task: {currentTask || 'Initializing...'}
-              </p>
-              <p className="text-gray-900 dark:text-white/90">
-                <span className="text-blue-500 dark:text-blue-400">◻</span> Progress: {Math.round(progress)}%
-              </p>
-              {status?.error && (
-                <p className="text-red-600 dark:text-red-400">
-                  <span className="text-red-700 dark:text-red-500">✗</span> Error: {status.error}
+            <div className="flex flex-col items-center justify-center h-full gap-6">
+              {/* Animated Icon */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-[var(--usc-green)]/20 rounded-full animate-pulse"></div>
+                <div className="relative bg-gradient-to-br from-[var(--usc-green)] to-[var(--usc-green)]/70 rounded-full p-4">
+                  <Zap className="w-8 h-8 text-white animate-bounce" />
+                </div>
+              </div>
+
+              {/* Main Message */}
+              <div className="text-center space-y-2">
+                <p className="text-foreground font-semibold text-base">Ready to Scrape</p>
+                <p className="text-muted-foreground text-sm">
+                  Fill in your credentials and select a scraping option to begin
                 </p>
+              </div>
+
+              {/* Quick Tips */}
+              <div className="w-full bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                <p className="text-xs font-semibold text-blue-900 dark:text-blue-300 mb-2">💡 Quick Tips:</p>
+                <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-1 list-disc list-inside">
+                  <li>Scraping typically takes 5-10 minutes</li>
+                  <li>Your data will be saved automatically</li>
+                  <li>Use Saved Files tab to load previous scans</li>
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6 h-full flex flex-col justify-center">
+              {/* Task Indicator */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-[var(--usc-green)] rounded-full animate-pulse"></span>
+                    <span className="w-2 h-2 bg-[var(--usc-green)]/60 rounded-full animate-pulse animation-delay-100"></span>
+                    <span className="w-2 h-2 bg-[var(--usc-green)]/30 rounded-full animate-pulse animation-delay-200"></span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Current Task</p>
+                    <p className="text-base font-semibold text-foreground">{currentTask || 'Initializing...'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress Bar Section */}
+              <div className="space-y-2">
+                {/* Percentage Display */}
+                <div className="flex items-end justify-between">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Progress</p>
+                  <p className="text-3xl font-bold" style={{ color: 'var(--usc-green)' }}>
+                    {Math.round(progress)}%
+                  </p>
+                </div>
+
+                {/* Animated Progress Bar */}
+                <div className="w-full bg-background border border-border rounded-full overflow-hidden h-3">
+                  <div
+                    className="h-full bg-gradient-to-r from-[var(--usc-green)] to-emerald-400 transition-all duration-500 ease-out rounded-full"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+
+                {/* Stats Row */}
+                <div className="flex justify-between text-xs text-muted-foreground pt-2">
+                {status?.total && <span>{Math.round((progress / 100) * status.total)} of {status.total} items</span>}
+                  <span className="font-mono">{Math.round(progress)}% complete</span>
+                </div>
+              </div>
+
+              {/* Courses Found Counter */}
+              {coursesCount > 0 && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-green-900 dark:text-green-300">Courses Found</span>
+                    <span className="text-2xl font-bold text-green-600 dark:text-green-400">{coursesCount}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Display */}
+              {status?.error && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-semibold text-red-900 dark:text-red-300">Error</p>
+                      <p className="text-xs text-red-700 dark:text-red-400">{status.error}</p>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           )}
