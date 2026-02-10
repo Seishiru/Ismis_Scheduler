@@ -94,7 +94,7 @@ class ScrapeStatus(BaseModel):
 class GenerateSchedulesRequest(BaseModel):
     """Request to generate schedule combinations"""
     course_codes: List[str] = Field(..., min_items=1)
-    max_combinations: int = Field(default=100, ge=1, le=1000)
+    max_combinations: int = Field(default=5000, ge=1, le=10000)
     json_filename: Optional[str] = None
 
 

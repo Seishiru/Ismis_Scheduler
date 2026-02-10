@@ -1,0 +1,202 @@
+﻿================================================================================
+SCHEDULE PERMUTATION SIMULATION
+================================================================================
+
+Question: How many possible schedule permutations can be formed using
+only non-dissolved sections, assuming no time conflicts, where each
+schedule includes exactly one section from each unique course?
+
+================================================================================
+
+NON-DISSOLVED SECTIONS BY COURSE:
+--------------------------------------------------------------------------------
+
+CIS 2106N: 11 sections
+  - Group 1: Sat 07:30 AM - 10:30 AM
+  - Group 2: Sat 07:30 AM - 10:30 AM
+  - Group 3: Sat 10:30 AM - 01:30 PM
+  - Group 4: Sat 10:30 AM - 01:30 PM
+  - Group 5: Sat 07:30 AM - 10:30 AM
+  - Group 6: Sat 07:30 AM - 10:30 AM
+  - Group 9: F 10:30 AM - 01:30 PM
+  - Group 10: F 10:30 AM - 01:30 PM
+  - Group 12: F 07:30 AM - 10:30 AM
+  - Group 13: F 01:30 PM - 04:30 PM
+  - Group 14: F 01:30 PM - 04:30 PM
+
+GE-STS: 42 sections
+  - Group 1: TTh 09:00 AM - 10:30 AM
+  - Group 2: MW 10:30 AM - 12:00 PM
+  - Group 4: TTh 10:30 AM - 12:00 PM
+  - Group 5: TTh 03:00 PM - 04:30 PM
+  - Group 6: MW 09:00 AM - 10:30 AM
+  - Group 7: MW 09:00 AM - 10:30 AM
+  - Group 8: MW 03:00 PM - 04:30 PM
+  - Group 9: TTh 07:30 AM - 09:00 AM
+  - Group 10: TTh 07:30 AM - 09:00 AM
+  - Group 11: TTh 07:30 AM - 09:00 AM
+  - Group 12: MW 06:00 PM - 07:30 PM
+  - Group 13: MW 07:30 AM - 09:00 AM
+  - Group 14: MW 04:30 PM - 06:00 PM
+  - Group 15: MW 01:30 PM - 03:00 PM
+  - Group 16: MW 03:00 PM - 04:30 PM
+  - Group 18: TTh 10:30 AM - 12:00 PM
+  - Group 19: TTh 03:00 PM - 04:30 PM
+  - Group 20: MW 01:30 PM - 03:00 PM
+  - Group 23: MW 10:30 AM - 12:00 PM
+  - Group 25: MW 04:30 PM - 06:00 PM
+  - Group 26: MW 07:30 AM - 09:00 AM
+  - Group 27: TTh 03:00 PM - 04:30 PM
+  - Group 28: MW 10:30 AM - 12:00 PM
+  - Group 29: MW 04:30 PM - 06:00 PM
+  - Group 30: TTh 12:00 PM - 01:30 PM
+  - Group 31: MW 09:00 AM - 10:30 AM
+  - Group 32: MW 07:30 AM - 09:00 AM
+  - Group 33: MW 07:30 AM - 09:00 AM
+  - Group 34: TTh 04:30 PM - 06:00 PM
+  - Group 35: TTh 06:00 PM - 07:30 PM
+  - Group 36: MW 06:00 PM - 07:30 PM
+  - Group 37: TTh 01:30 PM - 03:00 PM
+  - Group 38: TTh 03:00 PM - 04:30 PM
+  - Group 39: MW 03:00 PM - 04:30 PM
+  - Group 42: MW 04:30 PM - 06:00 PM
+  - Group 45: TTh 04:30 PM - 06:00 PM
+  - Group 46: TTh 09:00 AM - 10:30 AM
+  - Group 48: MW 09:00 AM - 10:30 AM
+  - Group 51: MW 12:00 PM - 01:30 PM
+  - Group 52: TTh 12:00 PM - 01:30 PM
+  - Group 55: MW 12:00 PM - 01:30 PM
+  - Group 59: TTh 04:30 PM - 06:00 PM
+
+CS 4201N: 4 sections
+  - Group 2: Sat 07:30 AM - 10:30 AM
+  - Group 4: Sat 07:30 AM - 10:30 AM
+  - Group 5: Sat 09:00 AM - 12:00 PM
+  - Group 6: Sat 01:30 PM - 04:30 PM
+
+IS 5101N: 3 sections
+  - Group 1: F 03:00 PM - 08:00 PM
+  - Group 2: F 03:00 PM - 08:00 PM
+  - Group 3: Sat 07:30 AM - 12:30 PM
+
+================================================================================
+RAW PERMUTATIONS (if no conflicts): 5,544
+================================================================================
+
+Generating valid permutations (no time conflicts)...
+
+Total combinations checked: 5,544
+Combinations with conflicts: 3,486
+
+================================================================================
+FINAL ANSWER
+================================================================================
+
+Valid schedule permutations: 2,058
+
+================================================================================
+
+SAMPLE VALID SCHEDULES (first 5):
+--------------------------------------------------------------------------------
+
+Schedule 1:
+  CIS 2106N - Group 1: Sat 07:30 AM - 10:30 AM
+  GE-STS - Group 1: TTh 09:00 AM - 10:30 AM
+  CS 4201N - Group 6: Sat 01:30 PM - 04:30 PM
+  IS 5101N - Group 1: F 03:00 PM - 08:00 PM
+
+Schedule 2:
+  CIS 2106N - Group 1: Sat 07:30 AM - 10:30 AM
+  GE-STS - Group 1: TTh 09:00 AM - 10:30 AM
+  CS 4201N - Group 6: Sat 01:30 PM - 04:30 PM
+  IS 5101N - Group 2: F 03:00 PM - 08:00 PM
+
+Schedule 3:
+  CIS 2106N - Group 1: Sat 07:30 AM - 10:30 AM
+  GE-STS - Group 2: MW 10:30 AM - 12:00 PM
+  CS 4201N - Group 6: Sat 01:30 PM - 04:30 PM
+  IS 5101N - Group 1: F 03:00 PM - 08:00 PM
+
+Schedule 4:
+  CIS 2106N - Group 1: Sat 07:30 AM - 10:30 AM
+  GE-STS - Group 2: MW 10:30 AM - 12:00 PM
+  CS 4201N - Group 6: Sat 01:30 PM - 04:30 PM
+  IS 5101N - Group 2: F 03:00 PM - 08:00 PM
+
+Schedule 5:
+  CIS 2106N - Group 1: Sat 07:30 AM - 10:30 AM
+  GE-STS - Group 4: TTh 10:30 AM - 12:00 PM
+  CS 4201N - Group 6: Sat 01:30 PM - 04:30 PM
+  IS 5101N - Group 1: F 03:00 PM - 08:00 PM
+
+================================================================================
+SECTION USAGE STATISTICS
+================================================================================
+
+CIS 2106N:
+  Group 1: appears in 84 schedules (4.1%)
+  Group 10: appears in 378 schedules (18.4%)
+  Group 12: appears in 378 schedules (18.4%)
+  Group 13: appears in 42 schedules (2.0%)
+  Group 14: appears in 42 schedules (2.0%)
+  Group 2: appears in 84 schedules (4.1%)
+  Group 3: appears in 252 schedules (12.2%)
+  Group 4: appears in 252 schedules (12.2%)
+  Group 5: appears in 84 schedules (4.1%)
+  Group 6: appears in 84 schedules (4.1%)
+  Group 9: appears in 378 schedules (18.4%)
+
+GE-STS:
+  Group 1: appears in 49 schedules (2.4%)
+  Group 10: appears in 49 schedules (2.4%)
+  Group 11: appears in 49 schedules (2.4%)
+  Group 12: appears in 49 schedules (2.4%)
+  Group 13: appears in 49 schedules (2.4%)
+  Group 14: appears in 49 schedules (2.4%)
+  Group 15: appears in 49 schedules (2.4%)
+  Group 16: appears in 49 schedules (2.4%)
+  Group 18: appears in 49 schedules (2.4%)
+  Group 19: appears in 49 schedules (2.4%)
+  Group 2: appears in 49 schedules (2.4%)
+  Group 20: appears in 49 schedules (2.4%)
+  Group 23: appears in 49 schedules (2.4%)
+  Group 25: appears in 49 schedules (2.4%)
+  Group 26: appears in 49 schedules (2.4%)
+  Group 27: appears in 49 schedules (2.4%)
+  Group 28: appears in 49 schedules (2.4%)
+  Group 29: appears in 49 schedules (2.4%)
+  Group 30: appears in 49 schedules (2.4%)
+  Group 31: appears in 49 schedules (2.4%)
+  Group 32: appears in 49 schedules (2.4%)
+  Group 33: appears in 49 schedules (2.4%)
+  Group 34: appears in 49 schedules (2.4%)
+  Group 35: appears in 49 schedules (2.4%)
+  Group 36: appears in 49 schedules (2.4%)
+  Group 37: appears in 49 schedules (2.4%)
+  Group 38: appears in 49 schedules (2.4%)
+  Group 39: appears in 49 schedules (2.4%)
+  Group 4: appears in 49 schedules (2.4%)
+  Group 42: appears in 49 schedules (2.4%)
+  Group 45: appears in 49 schedules (2.4%)
+  Group 46: appears in 49 schedules (2.4%)
+  Group 48: appears in 49 schedules (2.4%)
+  Group 5: appears in 49 schedules (2.4%)
+  Group 51: appears in 49 schedules (2.4%)
+  Group 52: appears in 49 schedules (2.4%)
+  Group 55: appears in 49 schedules (2.4%)
+  Group 59: appears in 49 schedules (2.4%)
+  Group 6: appears in 49 schedules (2.4%)
+  Group 7: appears in 49 schedules (2.4%)
+  Group 8: appears in 49 schedules (2.4%)
+  Group 9: appears in 49 schedules (2.4%)
+
+CS 4201N:
+  Group 2: appears in 420 schedules (20.4%)
+  Group 4: appears in 420 schedules (20.4%)
+  Group 5: appears in 252 schedules (12.2%)
+  Group 6: appears in 966 schedules (46.9%)
+
+IS 5101N:
+  Group 1: appears in 924 schedules (44.9%)
+  Group 2: appears in 924 schedules (44.9%)
+  Group 3: appears in 210 schedules (10.2%)

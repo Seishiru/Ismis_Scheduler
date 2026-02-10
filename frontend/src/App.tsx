@@ -11,10 +11,13 @@ import { Toaster } from 'sonner';
 import type { Course } from './types/course';
 import "./styles/index.css";  
 
+const coursesStorageKey = 'ismis_scraped_courses';
+
 export default function App() {
   const [activeView, setActiveView] = useState('scraper');
   const [courses, setCourses] = useState<Course[]>([]);
   const [isHoveringLeft, setIsHoveringLeft] = useState(false);
+  const [selectedCoursesByCode, setSelectedCoursesByCode] = useState<Map<string, Course>>(new Map());
 
   const viewOrder = ['scraper', 'schedule', 'rooms', 'conflicts', 'settings', 'about'];
 
@@ -34,6 +37,30 @@ export default function App() {
       window.removeEventListener('themeChange' as any, handleThemeChange);
     };
   }, []);
+
+  // Restore saved courses on first load
+  useEffect(() => {
+    const storedCourses = localStorage.getItem(coursesStorageKey);
+    if (!storedCourses) return;
+
+    try {
+      const parsed = JSON.parse(storedCourses);
+      if (Array.isArray(parsed)) {
+        setCourses(parsed as Course[]);
+      }
+    } catch {
+      localStorage.removeItem(coursesStorageKey);
+    }
+  }, []);
+
+  // Persist courses to localStorage
+  useEffect(() => {
+    if (courses.length > 0) {
+      localStorage.setItem(coursesStorageKey, JSON.stringify(courses));
+    } else {
+      localStorage.removeItem(coursesStorageKey);
+    }
+  }, [courses]);
 
   // Handle scroll to switch tabs when hovering on left side
   useEffect(() => {
@@ -92,7 +119,11 @@ export default function App() {
               <ScraperView onCoursesScraped={handleCoursesScraped} />
               {courses.length > 0 && (
                 <div className="mt-8">
-                  <DataTable courses={courses} />
+                  <DataTable 
+                    courses={courses} 
+                    selectedCoursesByCode={selectedCoursesByCode}
+                    onCourseSelect={setSelectedCoursesByCode}
+                  />
                 </div>
               )}
             </>
@@ -100,8 +131,15 @@ export default function App() {
 
           {activeView === 'schedule' && (
             <div className="space-y-8">
-              <ScheduleBuilder courses={courses} />
-              <DataTable courses={courses} />
+              <ScheduleBuilder 
+                courses={courses} 
+                selectedCoursesByCode={selectedCoursesByCode}
+              />
+              <DataTable 
+                courses={courses} 
+                selectedCoursesByCode={selectedCoursesByCode}
+                onCourseSelect={setSelectedCoursesByCode}
+              />
             </div>
           )}
 

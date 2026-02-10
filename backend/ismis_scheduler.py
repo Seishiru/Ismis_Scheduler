@@ -126,7 +126,7 @@ def get_academic_period_choice():
 # SCHEDULE GENERATOR FUNCTIONS
 # ============================================================================
 
-def parse_schedule(schedule_str: str):
+def parse_schedule(schedule_str: str, debug: bool = False):
     """
     Parses a schedule string like "MWF 10:00-12:00" or "Sat 07:30 AM - 10:30 AM" into structured data.
     Returns a dict with 'days' (list) and 'time' (tuple) or None if invalid.
@@ -139,6 +139,8 @@ def parse_schedule(schedule_str: str):
         return None
     
     schedule_str = schedule_str.strip()
+    if debug:
+        print(f"[PARSE] Processing: {schedule_str}")
     
     # Mapping from full/3-letter day names to single-letter codes
     day_mapping = {
@@ -219,11 +221,16 @@ def parse_schedule(schedule_str: str):
     start_minutes = start_hour * 60 + start_min
     end_minutes = end_hour * 60 + end_min
     
-    return {
+    result = {
         "days": list(days_str),
         "start": start_minutes,
         "end": end_minutes
     }
+    
+    if debug:
+        print(f"[PARSE] ✓ Success: {result}")
+    
+    return result
 
 
 def is_course_full(course) -> bool:
@@ -263,48 +270,95 @@ def get_schedule_status(schedule) -> dict:
 def schedules_conflict(sched1, sched2) -> bool:
     """
     Checks if two parsed schedules conflict.
-    Returns True if they overlap, False otherwise.
+    Two schedules conflict if they share ANY day and their times overlap.
+    
+    Args:
+        sched1: Parsed schedule dict with 'days', 'start', 'end' or None
+        sched2: Parsed schedule dict with 'days', 'start', 'end' or None
+    
+    Returns:
+        True if they overlap, False otherwise
     """
+    # TBA (None) classes don't conflict with anything
     if sched1 is None or sched2 is None:
-        return False  # TBA classes don't conflict
+        return False
     
     # Check if they share any days
-    days1 = set(sched1["days"])
-    days2 = set(sched2["days"])
+    days1 = set(sched1.get("days", []))
+    days2 = set(sched2.get("days", []))
     
-    if not days1.intersection(days2):
-        return False  # No common days
+    if not days1 or not days2:
+        return False
+    
+    shared_days = days1.intersection(days2)
+    if not shared_days:
+        return False  # No common days, no conflict
     
     # Check if times overlap on shared days
-    # Conflict if: start1 < end2 AND start2 < end1
-    if sched1["start"] < sched2["end"] and sched2["start"] < sched1["end"]:
+    # Two times conflict if: start1 < end2 AND start2 < end1
+    # Note: Using strict < for start comparisons to allow back-to-back classes
+    start1 = sched1.get("start", 0)
+    end1 = sched1.get("end", 0)
+    start2 = sched2.get("start", 0)
+    end2 = sched2.get("end", 0)
+    
+    # Validate times are reasonable (between 0 and 2400 minutes)
+    if not all(0 <= t <= 1440 for t in [start1, end1, start2, end2]):
+        return False
+    
+    # Overlap detection: if one class ends when another starts, they don't conflict
+    if start1 < end2 and start2 < end1:
         return True
     
     return False
 
 
-def generate_schedule_combinations(courses_by_code: dict, max_combinations: int = 1000):
+def has_schedule_conflict(schedule: list) -> bool:
+    """
+    Validates if a schedule combination has any conflicts.
+    
+    Args:
+        schedule: List of course sections
+    
+    Returns:
+        True if any courses conflict, False otherwise
+    """
+    for i in range(len(schedule)):
+        for j in range(i + 1, len(schedule)):
+            sched1 = parse_schedule(schedule[i]["schedule"])
+            sched2 = parse_schedule(schedule[j]["schedule"])
+            if schedules_conflict(sched1, sched2):
+                return True
+    return False
+
+
+def generate_schedule_combinations(courses_by_code: dict, max_combinations: int = 1000, debug: bool = False):
     """
     Generates all valid schedule combinations from selected courses.
+    Uses backtracking to build permutations and filters out any with time conflicts.
     
     Args:
         courses_by_code: Dict organized as {course_code: [sections]}
         max_combinations: Stop after finding this many valid schedules
+        debug: If True, logs detailed rejection info
     
     Returns:
-        List of valid schedule combinations
+        List of valid schedule combinations with no conflicts
     """
     course_codes = list(courses_by_code.keys())
     valid_schedules = []
+    rejected_by_conflict = {code: [] for code in course_codes}
     
     def backtrack(index: int, current_schedule: list):
-        """Recursively build valid schedules."""
+        """Recursively build valid schedules via permutation."""
         if len(valid_schedules) >= max_combinations:
             return
         
         # Base case: all courses assigned
         if index == len(course_codes):
-            valid_schedules.append(current_schedule[:])
+            # Final validation: ensure no conflicts in the complete schedule
+            if not has_schedule_conflict(current_schedule):
+                valid_schedules.append(current_schedule[:])
             return
         
         # Try each section of the current course
@@ -316,18 +370,40 @@ def generate_schedule_combinations(courses_by_code: dict, max_combinations: int 
             
             # Check for conflicts with already-scheduled courses
             has_conflict = False
+            conflict_info = None
             for scheduled_course in current_schedule:
-                if schedules_conflict(parsed_sched, parse_schedule(scheduled_course["schedule"])):
+                sched_to_check = parse_schedule(scheduled_course["schedule"])
+                if schedules_conflict(parsed_sched, sched_to_check):
                     has_conflict = True
+                    conflict_info = scheduled_course.get("code", "Unknown")
                     break
             
-            # If no conflict, add this section and continue
+            # If no conflict, add this section and continue building
             if not has_conflict:
                 current_schedule.append(section)
                 backtrack(index + 1, current_schedule)
                 current_schedule.pop()
+            else:
+                # Track rejections
+                section_code = section.get("code", "Unknown")
+                rejected_by_conflict[course_code].append({
+                    "section": section_code,
+                    "schedule": section.get("schedule", "TBA"),
+                    "conflicted_with": conflict_info
+                })
     
+    if debug:
+        print(f"\n[BACKTRACK] Attempting to build combinations for {len(course_codes)} courses")
     backtrack(0, [])
+    
+    if debug:
+        print(f"[BACKTRACK] Generated {len(valid_schedules)} valid combinations")
+        for code, rejections in rejected_by_conflict.items():
+            if rejections:
+                print(f"\n[BACKTRACK] {code} had {len(rejections)} sections rejected:")
+                for rej in rejections:
+                    print(f"  - {rej['section']}: {rej['schedule']} (conflicted with {rej['conflicted_with']})")
+    
     return valid_schedules
 
 

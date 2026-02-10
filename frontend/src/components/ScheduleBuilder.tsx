@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Card } from './ui/card';
-import { AlertTriangle, Clock, Sparkles, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Clock, Sparkles, ChevronLeft, ChevronRight, CheckCircle2, Filter } from 'lucide-react';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import type { Course } from '../types/course';
 import { useScheduleGenerator } from '../hooks/useCourses';
 
@@ -16,14 +17,17 @@ interface ScheduledCourse extends Course {
 
 interface ScheduleBuilderProps {
   courses: Course[];
+  selectedCoursesByCode?: Map<string, Course>;
 }
 
-export function ScheduleBuilder({ courses }: ScheduleBuilderProps) {
+export function ScheduleBuilder({ courses, selectedCoursesByCode = new Map() }: ScheduleBuilderProps) {
   const [scheduledCourses, setScheduledCourses] = useState<ScheduledCourse[]>([]);
   const [conflicts, setConflicts] = useState<Set<string>>(new Set());
   const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set());
   const [currentScheduleIndex, setCurrentScheduleIndex] = useState(0);
   const [showSelection, setShowSelection] = useState(false);
+  const [maxCombinations, setMaxCombinations] = useState<number>(5000);
+  const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   
   const { generateSchedules, schedules, generating, error: genError } = useScheduleGenerator();
 
@@ -154,7 +158,7 @@ export function ScheduleBuilder({ courses }: ScheduleBuilderProps) {
     
     const success = await generateSchedules({
       course_codes: courseCodes,
-      max_combinations: 100,
+      max_combinations: maxCombinations,
     });
 
     if (success && schedules && schedules.length > 0) {
@@ -164,11 +168,37 @@ export function ScheduleBuilder({ courses }: ScheduleBuilderProps) {
   };
 
   const handlePreviousSchedule = () => {
-    setCurrentScheduleIndex(prev => Math.max(0, prev - 1));
+    if (!schedules) return;
+    
+    let prevIndex = currentScheduleIndex - 1;
+    
+    if (showAvailableOnly) {
+      // Find previous available schedule
+      while (prevIndex >= 0 && schedules[prevIndex].status !== 'available') {
+        prevIndex--;
+      }
+    }
+    
+    if (prevIndex >= 0) {
+      setCurrentScheduleIndex(prevIndex);
+    }
   };
 
   const handleNextSchedule = () => {
-    setCurrentScheduleIndex(prev => Math.min((schedules?.length || 1) - 1, prev + 1));
+    if (!schedules) return;
+    
+    let nextIndex = currentScheduleIndex + 1;
+    
+    if (showAvailableOnly) {
+      // Find next available schedule
+      while (nextIndex < schedules.length && schedules[nextIndex].status !== 'available') {
+        nextIndex++;
+      }
+    }
+    
+    if (nextIndex < schedules.length) {
+      setCurrentScheduleIndex(nextIndex);
+    }
   };
 
   const parseDayTime = (schedule: string): { days: string[]; startTime: number; endTime: number } | null => {
@@ -449,27 +479,50 @@ export function ScheduleBuilder({ courses }: ScheduleBuilderProps) {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Select Courses for Schedule Generation</h3>
-            {uniqueCourses.length > 0 && (
+            <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedCourses.size === uniqueCourses.length && uniqueCourses.length > 0}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      // Select all courses
-                      const allCodes = new Set(uniqueCourses.map(c => c.code.split(' - ')[0]));
-                      setSelectedCourses(allCodes);
-                    } else {
-                      // Deselect all courses
-                      setSelectedCourses(new Set());
-                    }
-                  }}
-                  id="select-all"
-                />
-                <Label htmlFor="select-all" className="cursor-pointer font-medium">
-                  Select All ({uniqueCourses.length} courses)
+                <Label htmlFor="max-combos" className="text-sm whitespace-nowrap">
+                  Max Schedules:
                 </Label>
+                <Select
+                  value={maxCombinations.toString()}
+                  onValueChange={(value) => setMaxCombinations(Number(value))}
+                >
+                  <SelectTrigger id="max-combos" className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="100">100</SelectItem>
+                    <SelectItem value="500">500</SelectItem>
+                    <SelectItem value="1000">1,000</SelectItem>
+                    <SelectItem value="2500">2,500</SelectItem>
+                    <SelectItem value="5000">5,000</SelectItem>
+                    <SelectItem value="10000">10,000</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
+              {uniqueCourses.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={selectedCourses.size === uniqueCourses.length && uniqueCourses.length > 0}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        // Select all courses
+                        const allCodes = new Set(uniqueCourses.map(c => c.code.split(' - ')[0]));
+                        setSelectedCourses(allCodes);
+                      } else {
+                        // Deselect all courses
+                        setSelectedCourses(new Set());
+                      }
+                    }}
+                    id="select-all"
+                  />
+                  <Label htmlFor="select-all" className="cursor-pointer font-medium">
+                    Select All ({uniqueCourses.length} courses)
+                  </Label>
+                </div>
+              )}
+            </div>
           </div>
           {uniqueCourses.length === 0 ? (
             <p className="text-muted-foreground text-sm">
@@ -513,17 +566,29 @@ export function ScheduleBuilder({ courses }: ScheduleBuilderProps) {
       )}
 
       {/* Generated Schedules Navigation */}
-      {!showSelection && schedules && schedules.length > 0 && (
+      {!showSelection && schedules && schedules.length > 0 && (() => {
+        const filteredSchedules = showAvailableOnly 
+          ? schedules.filter(s => s.status === 'available')
+          : schedules;
+        const currentFilteredIndex = showAvailableOnly
+          ? filteredSchedules.findIndex((_, idx) => filteredSchedules[idx] === schedules[currentScheduleIndex])
+          : currentScheduleIndex;
+        const displayIndex = currentFilteredIndex >= 0 && currentFilteredIndex < filteredSchedules.length 
+          ? currentFilteredIndex 
+          : 0;
+        
+        return filteredSchedules.length > 0 ? (
         <Card className="p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <Sparkles className="w-5 h-5 text-green-600 dark:text-green-400" />
               <div>
                 <p className="font-semibold text-green-900 dark:text-green-200">
-                  Schedule {currentScheduleIndex + 1} of {schedules.length}
+                  Schedule {displayIndex + 1} of {filteredSchedules.length}
+                  {showAvailableOnly && <span className="text-xs ml-1">({schedules.length} total)</span>}
                 </p>
                 <p className="text-sm text-green-700 dark:text-green-300">
-                  {schedules[currentScheduleIndex].status === 'available' ? (
+                  {filteredSchedules[displayIndex].status === 'available' ? (
                     <span className="flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" />
                       All courses available
@@ -537,12 +602,32 @@ export function ScheduleBuilder({ courses }: ScheduleBuilderProps) {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 mr-2">
+                <Checkbox
+                  id="filter-available"
+                  checked={showAvailableOnly}
+                  onCheckedChange={(checked) => {
+                    setShowAvailableOnly(!!checked);
+                    // Reset to first schedule when toggling filter
+                    if (checked && schedules[currentScheduleIndex]?.status !== 'available') {
+                      const firstAvailable = schedules.findIndex(s => s.status === 'available');
+                      if (firstAvailable >= 0) {
+                        setCurrentScheduleIndex(firstAvailable);
+                      }
+                    }
+                  }}
+                />
+                <Label htmlFor="filter-available" className="text-sm cursor-pointer flex items-center gap-1">
+                  <Filter className="w-3 h-3" />
+                  Available only
+                </Label>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handlePreviousSchedule}
-                disabled={currentScheduleIndex === 0}
+                disabled={displayIndex === 0}
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -550,37 +635,55 @@ export function ScheduleBuilder({ courses }: ScheduleBuilderProps) {
                 variant="outline"
                 size="sm"
                 onClick={handleNextSchedule}
-                disabled={currentScheduleIndex === schedules.length - 1}
+                disabled={displayIndex === filteredSchedules.length - 1}
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            {schedules.map((schedule, index) => {
-              const isActive = index === currentScheduleIndex;
+            {(showAvailableOnly ? filteredSchedules : schedules).map((schedule, index) => {
+              const originalIndex = showAvailableOnly ? schedules.indexOf(schedule) : index;
+              const isActive = originalIndex === currentScheduleIndex;
               const isAvailable = schedule.status === 'available';
-              const baseClasses = 'w-9 h-9 rounded-md border text-sm font-semibold transition-colors';
-              const stateClasses = isAvailable
-                ? 'border-green-600 bg-green-50 text-green-900'
-                : 'border-red-600 bg-red-50 text-red-900';
+              
+              // Check if this schedule contains ALL selected courses
+              const containsAllSelected = selectedCoursesByCode.size > 0 
+                ? Array.from(selectedCoursesByCode.values()).every(selectedCourse =>
+                    schedule.courses.some(c => c.code === selectedCourse.code)
+                  )
+                : false;
+              
+              const baseClasses = 'w-9 h-9 rounded-md border text-sm font-semibold transition-all duration-200';
+              let stateClasses = '';
+              
+              if (containsAllSelected) {
+                // All selected courses in this schedule
+                stateClasses = 'border-yellow-500 bg-yellow-200 dark:bg-yellow-700 text-yellow-900 dark:text-yellow-100 ring-2 ring-yellow-400';
+              } else if (isAvailable) {
+                stateClasses = 'border-green-600 bg-green-50 text-green-900';
+              } else {
+                stateClasses = 'border-red-600 bg-red-50 text-red-900';
+              }
+              
               const activeClasses = isActive ? 'ring-2 ring-offset-2 ring-[var(--usc-green)]' : '';
 
               return (
                 <button
-                  key={`schedule-box-${index}`}
+                  key={`schedule-box-${originalIndex}`}
                   type="button"
-                  onClick={() => setCurrentScheduleIndex(index)}
+                  onClick={() => setCurrentScheduleIndex(originalIndex)}
                   className={`${baseClasses} ${stateClasses} ${activeClasses}`}
-                  aria-label={`Schedule option ${index + 1}`}
+                  aria-label={`Schedule option ${originalIndex + 1}`}
                 >
-                  {index + 1}
+                  {originalIndex + 1}
                 </button>
               );
             })}
           </div>
         </Card>
-      )}
+        ) : null;
+      })()}
 
       {genError && (
         <Card className="p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">

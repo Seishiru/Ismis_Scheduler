@@ -10,6 +10,8 @@ import type { Course } from '../types/course';
 
 interface DataTableProps {
   courses: Course[];
+  selectedCoursesByCode?: Map<string, Course>;
+  onCourseSelect?: (selectedMap: Map<string, Course>) => void;
 }
 
 const getCourseAvailability = (course: Course): 'available' | 'unavailable' | 'unknown' => {
@@ -33,11 +35,33 @@ const getCourseAvailability = (course: Course): 'available' | 'unavailable' | 'u
   return 'unknown';
 };
 
-export function DataTable({ courses }: DataTableProps) {
+export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourseSelect }: DataTableProps) {
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [hideFullCourses, setHideFullCourses] = useState(false);
   const [hideDissolvedCourses, setHideDissolvedCourses] = useState(false);
+
+  // Get the base course code (e.g., "CIS 2106N" from "CIS 2106N - Group 1")
+  const getBaseCourseCode = (courseCode: string): string => {
+    return courseCode.split(' - ')[0];
+  };
+
+  const handleRowClick = (course: Course) => {
+    if (!onCourseSelect) return;
+    
+    const baseCode = getBaseCourseCode(course.code);
+    const newSelection = new Map(selectedCoursesByCode);
+    
+    // If clicking the same course, deselect it
+    if (newSelection.get(baseCode)?.code === course.code) {
+      newSelection.delete(baseCode);
+    } else {
+      // Select this course for this base code
+      newSelection.set(baseCode, course);
+    }
+    
+    onCourseSelect(newSelection);
+  };
 
   // Filter courses based on search query
   const filteredCourses = useMemo(() => {
@@ -111,6 +135,20 @@ export function DataTable({ courses }: DataTableProps) {
               <Label htmlFor="hide-dissolved-courses" className="text-white/90 text-sm cursor-pointer">
                 Hide Dissolved
               </Label>
+              {selectedCoursesByCode.size > 0 && (
+                <>
+                  <div className="w-px h-5 bg-white/20 mx-1" />
+                  <Checkbox
+                    id="unselect-all"
+                    checked={false}
+                    onCheckedChange={() => onCourseSelect && onCourseSelect(new Map())}
+                    className="border-white/40"
+                  />
+                  <Label htmlFor="unselect-all" className="text-white/90 text-sm cursor-pointer">
+                    Unselect All
+                  </Label>
+                </>
+              )}
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
@@ -168,10 +206,36 @@ export function DataTable({ courses }: DataTableProps) {
                   unknown: 'bg-white border-black'
                 };
 
+                const baseCode = getBaseCourseCode(course.code);
+                const isSelected = selectedCoursesByCode.get(baseCode)?.code === course.code;
+                
+                // Get all unique course codes
+                const uniqueCourseCodes = new Set(courses.map(c => getBaseCourseCode(c.code)));
+                const allCoursesSelected = selectedCoursesByCode.size === uniqueCourseCodes.size;
+                
+                // This row is unselectable if:
+                // 1. This course's base code is already selected AND this specific section is NOT selected (can't switch sections)
+                // 2. OR all courses are selected AND this one isn't selected
+                const isOtherSectionOfSelectedCourse = selectedCoursesByCode.has(baseCode) && !isSelected;
+                const isUnselectable = isOtherSectionOfSelectedCourse || (allCoursesSelected && !selectedCoursesByCode.has(baseCode));
+                const isClickable = onCourseSelect && !isUnselectable;
+
+                let rowClassName = "transition-all duration-200 ";
+                if (isSelected) {
+                  rowClassName += "bg-yellow-100 dark:bg-yellow-900/30 ring-2 ring-yellow-500 cursor-pointer ";
+                } else if (isUnselectable) {
+                  rowClassName += "opacity-30 cursor-not-allowed pointer-events-none ";
+                } else if (isClickable) {
+                  rowClassName += "hover:bg-muted cursor-pointer ";
+                } else {
+                  rowClassName += "hover:bg-muted ";
+                }
+
                 return (
                   <TableRow
                     key={`${course.code}-${index}`}
-                    className="hover:bg-muted transition-colors"
+                    className={rowClassName}
+                    onClick={() => isClickable && handleRowClick(course)}
                   >
                     <TableCell className="font-medium text-[var(--usc-green)]">
                       {course.code}

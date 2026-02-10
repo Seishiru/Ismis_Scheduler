@@ -402,6 +402,10 @@ async def generate_schedules(request: GenerateSchedulesRequest):
         if not courses_data:
             raise HTTPException(status_code=404, detail="No courses data found")
         
+        print(f"\n{'='*70}")
+        print(f"[SCHEDULE GENERATION] Starting with {len(request.course_codes)} requested courses")
+        print(f"{'='*70}")
+        
         # Filter out DISSOLVED courses and group by code
         courses_by_code = {}
         for course in courses_data:
@@ -414,11 +418,21 @@ async def generate_schedules(request: GenerateSchedulesRequest):
                 courses_by_code[code] = []
             courses_by_code[code].append(course)
         
+        print(f"[INFO] Loaded {len(courses_by_code)} unique course codes from database\n")
+        
         # Filter to selected courses only
         selected_dict = {}
         for code in request.course_codes:
             if code in courses_by_code:
                 selected_dict[code] = courses_by_code[code]
+                # Log available sections for debugging
+                print(f"[COURSE: {code}] - {len(courses_by_code[code])} sections:")
+                for i, section in enumerate(courses_by_code[code], 1):
+                    sched = section.get('schedule', 'TBA')
+                    status_val = section.get('status', 'UNKNOWN')
+                    enrolled = section.get('enrolled', '?/?')
+                    group = section.get('code', '').split(' - ')[-1]
+                    print(f"  [{i:2d}] {group:10s} | {sched:25s} | {status_val:15s} | Enrolled: {enrolled}")
             else:
                 raise HTTPException(
                     status_code=400,
@@ -426,13 +440,23 @@ async def generate_schedules(request: GenerateSchedulesRequest):
                 )
         
         # Generate combinations
+        print(f"\n{'='*70}")
+        print(f"[GENERATION] Building permutations...")
+        print(f"{'='*70}")
+        
         start_time = time.time()
+        # Enable debug if no results expected
+        debug_mode = len(selected_dict) > 1
         combinations_raw = generate_schedule_combinations(
             selected_dict,
-            max_combinations=request.max_combinations
+            max_combinations=request.max_combinations,
+            debug=debug_mode
         )
         
-        # Add status to each combination
+        print(f"\n[RESULT] ✓ Generated {len(combinations_raw)} valid combinations")
+        print(f"{'='*70}\n")
+        
+        # Add status to each combination and ensure no conflicts
         combinations = []
         for combo in combinations_raw:
             status_info = get_schedule_status(combo)
@@ -443,6 +467,11 @@ async def generate_schedules(request: GenerateSchedulesRequest):
             ))
         
         elapsed = time.time() - start_time
+        
+        # Final validation: log if any schedules were filtered out due to unexpected conflicts
+        if len(combinations) == 0 and len(selected_dict) > 0:
+            import logging
+            logging.warning(f"No valid schedules generated for {len(selected_dict)} courses")
         
         return GenerateSchedulesResponse(
             combinations=combinations,

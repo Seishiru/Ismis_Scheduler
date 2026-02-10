@@ -638,5 +638,95 @@
     "room": "RHNB201TC",
     "department": "DEPARTMENT OF NUTRITION AND DIETETICS   (35)",
     "enrolled": "24/35"
+  },
+  {
+    "code": "CS 4201N - Group 1",
+    "description": "SEMINARS AND TOURS",
+    "status": "DISSOLVED",
+    "teacher": "",
+    "schedule": "Sat 10:30 AM - 01:30 PM",
+    "room": "LB468TC",
+    "department": "DEPARTMENT OF COMPUTER, INFORMATION SCIENCES AND MATHEMATICS   (30)",
+    "enrolled": "0/0"
+  },
+  {
+    "code": "CS 4201N - Group 2",
+    "description": "SEMINARS AND TOURS",
+    "status": "BLOCKSECTION",
+    "teacher": "BANDALAN, CHRISTINE D.",
+    "schedule": "Sat 07:30 AM - 10:30 AM",
+    "room": "LB483TC",
+    "department": "DEPARTMENT OF COMPUTER, INFORMATION SCIENCES AND MATHEMATICS   (30)",
+    "enrolled": "40/40"
+  },
+  {
+    "code": "CS 4201N - Group 3",
+    "description": "SEMINARS AND TOURS",
+    "status": "DISSOLVED",
+    "teacher": "",
+    "schedule": "Sat 01:30 PM - 04:30 PM",
+    "room": "LB468TC",
+    "department": "DEPARTMENT OF COMPUTER, INFORMATION SCIENCES AND MATHEMATICS   (30)",
+    "enrolled": "13/13"
+  },
+  {
+    "code": "CS 4201N - Group 4",
+    "description": "SEMINARS AND TOURS",
+    "status": "REGULAR",
+    "teacher": "FUENTES, KATRINA B.",
+    "schedule": "Sat 07:30 AM - 10:30 AM",
+    "room": "LB484TC",
+    "department": "DEPARTMENT OF COMPUTER, INFORMATION SCIENCES AND MATHEMATICS   (20)",
+    "enrolled": "20/20"
+  },
+  {
+    "code": "CS 4201N - Group 5",
+    "description": "SEMINARS AND TOURS",
+    "status": "BLOCKSECTION",
+    "teacher": "ROA, DORIZ R.",
+    "schedule": "Sat 09:00 AM - 12:00 PM",
+    "room": "LB485TC",
+    "department": "DEPARTMENT OF COMPUTER, INFORMATION SCIENCES AND MATHEMATICS   (40)",
+    "enrolled": "40/40"
+  },
+  {
+    "code": "CS 4201N - Group 6",
+    "description": "SEMINARS AND TOURS",
+    "status": "REGULAR",
+    "teacher": "SEBIAL, ARCHIVAL J.",
+    "schedule": "Sat 01:30 PM - 04:30 PM",
+    "room": "LB470TC",
+    "department": "DEPARTMENT OF COMPUTER, INFORMATION SCIENCES AND MATHEMATICS   (10)",
+    "enrolled": "32/35"
+  },
+  {
+    "code": "IS 5101N - Group 1",
+    "description": "DECISION SUPPORT SYSTEMS",
+    "status": "REGULAR",
+    "teacher": "AMANCIO, KHENT HAROLD P.",
+    "schedule": "F 03:00 PM - 08:00 PM",
+    "room": "LB468TC",
+    "department": "DEPARTMENT OF COMPUTER, INFORMATION SCIENCES AND MATHEMATICS   (45)",
+    "enrolled": "29/30"
+  },
+  {
+    "code": "IS 5101N - Group 2",
+    "description": "DECISION SUPPORT SYSTEMS",
+    "status": "REGULAR",
+    "teacher": "GUNASEKARAN, SARASWATHY SHAMINI",
+    "schedule": "F 03:00 PM - 08:00 PM",
+    "room": "LB483TC",
+    "department": "DEPARTMENT OF COMPUTER, INFORMATION SCIENCES AND MATHEMATICS   (30)",
+    "enrolled": "30/30"
+  },
+  {
+    "code": "IS 5101N - Group 3",
+    "description": "DECISION SUPPORT SYSTEMS",
+    "status": "REGULAR",
+    "teacher": "BARICUATRO, MANUEL JR. A.",
+    "schedule": "Sat 07:30 AM - 12:30 PM",
+    "room": "LB443TC",
+    "department": "DEPARTMENT OF COMPUTER, INFORMATION SCIENCES AND MATHEMATICS   (30)",
+    "enrolled": "29/30"
   }
 ]
