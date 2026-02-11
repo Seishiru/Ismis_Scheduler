@@ -6,11 +6,12 @@ import courseAPI from '../services/api';
 import type { Course, JSONFile } from '../types/course';
 
 interface FilesViewProps {
-  onSelectCourses: (courses: Course[], scrapeType: 'specific' | 'all', filename: string) => void;
+  onSelectCourses: (courses: Course[], scrapeType: 'specific' | 'all', filename: string, lastUpdated?: string) => void;
   refreshTrigger?: number;
+  currentFilename?: string | null;
 }
 
-export function FilesView({ onSelectCourses, refreshTrigger = 0 }: FilesViewProps) {
+export function FilesView({ onSelectCourses, refreshTrigger = 0, currentFilename = null }: FilesViewProps) {
   const [files, setFiles] = useState<JSONFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +50,17 @@ export function FilesView({ onSelectCourses, refreshTrigger = 0 }: FilesViewProp
       setError(null);
       const response = await courseAPI.getAvailableFiles();
       console.log('[FilesView] Received files:', response);
-      setFiles(response.files || []);
+      const filesList = response.files || [];
+      setFiles(filesList);
+      
+      // Sync loadedFile with currentFilename from parent
+      if (currentFilename) {
+        const loadedFileFromParent = filesList.find(f => f.filename === currentFilename);
+        if (loadedFileFromParent) {
+          console.log('[FilesView] Syncing loadedFile with currentFilename:', currentFilename);
+          setLoadedFile(loadedFileFromParent);
+        }
+      }
     } catch (err) {
       console.error('[FilesView] Error fetching files:', err);
       setError('Failed to load saved files. ' + (err instanceof Error ? err.message : ''));
@@ -83,7 +94,7 @@ export function FilesView({ onSelectCourses, refreshTrigger = 0 }: FilesViewProp
             // Detect scrape type from filename suffix
             const scrapeType = newestFile.filename.toLowerCase().includes('_all.json') ? 'all' : 'specific';
             console.log('[FilesView] Loaded', coursesResponse.courses.length, 'courses, type:', scrapeType);
-            onSelectCourses(coursesResponse.courses, scrapeType, newestFile.filename);
+            onSelectCourses(coursesResponse.courses, scrapeType, newestFile.filename, coursesResponse.last_updated);
             setLoadedFile(newestFile);
           } catch (err) {
             console.error('[FilesView] Auto-load error:', err);
@@ -116,7 +127,7 @@ export function FilesView({ onSelectCourses, refreshTrigger = 0 }: FilesViewProp
       // Determine scrape type based on filename suffix
       const scrapeType = selectedFile.filename.toLowerCase().includes('_all.json') ? 'all' : 'specific';
       
-      onSelectCourses(response.courses, scrapeType, selectedFile.filename);
+      onSelectCourses(response.courses, scrapeType, selectedFile.filename, response.last_updated);
       setLoadedFile(selectedFile);
       
       // Show success message

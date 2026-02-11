@@ -8,6 +8,8 @@ import { SettingsView } from './components/SettingsView';
 import { AboutView } from './components/AboutView';
 import { AvailableRoomsView } from './components/AvailableRoomsView';
 import { DataStatusHeader } from './components/DataStatusHeader';
+import { GuideView } from './components/GuideView';
+import { TutorialOverlay } from './components/TutorialOverlay';
 import { Toaster } from 'sonner';
 import type { Course } from './types/course';
 import courseAPI from './services/api';
@@ -25,8 +27,9 @@ export default function App() {
   const [isManualScrape, setIsManualScrape] = useState(false);
   const [fileRefreshTrigger, setFileRefreshTrigger] = useState(0);
   const [currentFilename, setCurrentFilename] = useState<string | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
 
-  const viewOrder = ['scraper', 'files', 'schedule', 'rooms', 'settings', 'about'];
+  const viewOrder = ['scraper', 'files', 'schedule', 'rooms', 'guide', 'settings', 'about'];
 
   // Listen for dark mode changes
   useEffect(() => {
@@ -119,8 +122,16 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div id="app-root" className="flex h-screen bg-background">
       <Toaster position="top-right" richColors />
+      
+      {/* Tutorial Overlay */}
+      {showTutorial && (
+        <TutorialOverlay 
+          onClose={() => setShowTutorial(false)}
+        />
+      )}
+      
       {/* Sidebar */}
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
 
@@ -152,12 +163,16 @@ export default function App() {
 
           {activeView === 'files' && (
             <FilesView 
-              onSelectCourses={(loadedCourses, scrapeTypeVal, filename) => {
+              onSelectCourses={(loadedCourses, scrapeTypeVal, filename, lastUpdated) => {
                 setCourses(loadedCourses);
                 setScrapeType(scrapeTypeVal);
                 setCurrentFilename(filename);
+                if (lastUpdated) {
+                  setLastUpdated(lastUpdated);
+                }
               }}
               refreshTrigger={fileRefreshTrigger}
+              currentFilename={currentFilename}
             />
           )}
 
@@ -177,7 +192,25 @@ export default function App() {
             </div>
           )}
 
-          {activeView === 'rooms' && <AvailableRoomsView courses={courses} />}
+          {activeView === 'rooms' && (
+            <AvailableRoomsView 
+              courses={courses} 
+              scrapeType={scrapeType}
+              currentFilename={currentFilename}
+              onLoadAllData={(loadedCourses, filename, lastUpdated) => {
+                setCourses(loadedCourses);
+                setScrapeType('all');
+                setCurrentFilename(filename);
+                if (lastUpdated) {
+                  setLastUpdated(lastUpdated);
+                }
+              }}
+            />
+          )}
+
+          {activeView === 'guide' && (
+            <GuideView onStartTutorial={() => setShowTutorial(true)} />
+          )}
 
           {activeView === 'settings' && <SettingsView />}
 

@@ -1,4 +1,4 @@
-import { Database, Calendar, Settings, Info, DoorOpen, FileJson } from 'lucide-react';
+import { Database, Calendar, Settings, Info, DoorOpen, FileJson, BookOpen } from 'lucide-react';
 
 interface SidebarProps {
   activeView: string;
@@ -11,6 +11,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
     { id: 'files', label: 'Saved Files', icon: FileJson },
     { id: 'schedule', label: 'Schedule Builder', icon: Calendar },
     { id: 'rooms', label: 'Available Rooms', icon: DoorOpen },
+    { id: 'guide', label: 'Guide', icon: BookOpen },
     { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'about', label: 'About', icon: Info },
   ];
@@ -40,6 +41,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
             return (
               <li key={item.id}>
                 <button
+                  id={`sidebar-${item.id}`}
                   onClick={() => onViewChange(item.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
