@@ -22,8 +22,8 @@ interface ScraperViewProps {
 
 export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewProps) {
   // Load credentials from localStorage (Settings) or sessionStorage (previous scraper session)
-  const [email, setEmail] = useState(() => {
-    return sessionStorage.getItem('ismis_email') || 
+  const [username, setUsername] = useState(() => {
+    return sessionStorage.getItem('ismis_username') || 
            localStorage.getItem('ismis_username') || '';
   });
   const [password, setPassword] = useState(() => {
@@ -71,7 +71,7 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
 
   // Handle login and fetch real options
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!username || !password) {
       setLoginError('Please enter your ISMIS credentials');
       return;
     }
@@ -80,7 +80,7 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
     setLoginError(null);
 
     try {
-      const response = await courseAPI.login({ username: email, password });
+      const response = await courseAPI.login({ username, password });
       console.log('Login successful:', response);
       
       setOptions(response.options);
@@ -88,7 +88,7 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
       
       // Persist login state to sessionStorage
       sessionStorage.setItem('ismis_logged_in', 'true');
-      sessionStorage.setItem('ismis_email', email);
+      sessionStorage.setItem('ismis_username', username);
       sessionStorage.setItem('ismis_options', JSON.stringify(response.options));
       
       // Set first option as default if available
@@ -119,7 +119,7 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
     
     // Clear sessionStorage
     sessionStorage.removeItem('ismis_logged_in');
-    sessionStorage.removeItem('ismis_email');
+    sessionStorage.removeItem('ismis_username');
     sessionStorage.removeItem('ismis_options');
     sessionStorage.removeItem('ismis_academic_period');
     sessionStorage.removeItem('ismis_academic_year');
@@ -149,7 +149,7 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
   }, [status, onCoursesScraped, currentScrapeType]);
 
   const handleScrapeAll = async () => {
-    if (!email || !password) {
+    if (!username || !password) {
       alert('Please enter your ISMIS credentials');
       return;
     }
@@ -161,11 +161,11 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
 
     onManualScrape?.();
     setCurrentScrapeType('all');
-    await scrapeAll(email, password, academicPeriod, academicYear);
+    await scrapeAll(username, password, academicPeriod, academicYear);
   };
 
   const handleScrapeSpecific = async () => {
-    if (!email || !password) {
+    if (!username || !password) {
       alert('Please enter your ISMIS credentials');
       return;
     }
@@ -183,7 +183,7 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
     onManualScrape?.();
     setCurrentScrapeType('specific');
     const codes = courseCodes.split(',').map(c => c.trim()).filter(Boolean);
-    await scrapeSpecific(email, password, codes, academicPeriod, academicYear);
+    await scrapeSpecific(username, password, codes, academicPeriod, academicYear);
   };
 
   const renderProgressBar = (percent: number) => {
@@ -229,21 +229,26 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
         /* Login Card */
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Login to ISMIS</h3>
-          <p className="text-sm text-muted-foreground mb-6">
+          <p className="text-sm text-muted-foreground mb-4">
             Enter your credentials to retrieve available academic periods and years
           </p>
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2 mb-6">
+            <p className="text-xs text-blue-900 dark:text-blue-300">
+              🔒 Your credentials are used only to authenticate with ISMIS and are never stored on our servers.
+            </p>
+          </div>
           
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="your.email@usc.edu.ph"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="your_username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="pl-9"
                   disabled={isLoggingIn}
                   onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
@@ -275,7 +280,7 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
 
             <Button
               onClick={handleLogin}
-              disabled={isLoggingIn || !email || !password}
+              disabled={isLoggingIn || !username || !password}
               className="w-full gap-2"
               style={{ 
                 backgroundColor: isLoggingIn ? '#6b7280' : 'var(--usc-green)',
@@ -302,7 +307,7 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
           {/* Credentials Card */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Logged in as {email}</h3>
+              <h3 className="text-lg font-semibold">Logged in as {username}</h3>
               <Button
                 onClick={handleLogout}
                 variant="outline"
@@ -378,7 +383,7 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
             </div>
             <Button
               onClick={handleScrapeAll}
-              disabled={isRunning || !email || !password || !academicPeriod || !academicYear || academicPeriod === 'NONE' || academicYear === 'NONE'}
+              disabled={isRunning || !username || !password || !academicPeriod || !academicYear || academicPeriod === 'NONE' || academicYear === 'NONE'}
               className="gap-2"
               style={{ 
                 backgroundColor: (isRunning || !academicPeriod || !academicYear || academicPeriod === 'NONE' || academicYear === 'NONE') ? '#6b7280' : 'var(--usc-green)',
@@ -417,7 +422,7 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
             </div>
             <Button
               onClick={handleScrapeSpecific}
-              disabled={isRunning || !email || !password || !courseCodes.trim() || !academicPeriod || !academicYear || academicPeriod === 'NONE' || academicYear === 'NONE'}
+              disabled={isRunning || !username || !password || !courseCodes.trim() || !academicPeriod || !academicYear || academicPeriod === 'NONE' || academicYear === 'NONE'}
               variant="outline"
               className="w-full"
             >

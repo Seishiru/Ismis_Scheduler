@@ -61,7 +61,9 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       {/* Footer */}
       <div className="p-4 border-t border-white/20">
         <p className="text-white/60 text-xs text-center">
-          © 2025 USC San Carlos
+          <a href="https://github.com/Seishiru" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+            @Seishiru
+          </a>
         </p>
       </div>
     </div>
