@@ -23,12 +23,12 @@ interface RoomSchedule {
   }>;
 }
 
-export function AvailableRoomsView({ courses, scrapeType, currentFilename, onLoadAllData }: AvailableRoomsViewProps) {
+export function AvailableRoomsView({ courses, scrapeType, onLoadAllData }: AvailableRoomsViewProps) {
   const [selectedDay, setSelectedDay] = useState<string>('Monday');
   const [selectedTime, setSelectedTime] = useState<string>('09:00');
   const [searchRoom, setSearchRoom] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [roomsPerPage, setRoomsPerPage] = useState(12);
+  const [roomsPerPage] = useState(12);
   const [overviewPage, setOverviewPage] = useState(1);
   const [overviewRoomsPerPage] = useState(10);
   const [loadingAllData, setLoadingAllData] = useState(false);

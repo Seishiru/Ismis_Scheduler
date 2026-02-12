@@ -2,7 +2,6 @@ import { Card } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -20,11 +19,11 @@ export function SettingsView() {
     const saved = localStorage.getItem('display_show_conflicts');
     return saved !== null ? saved === 'true' : true;
   });
-  const [use24Hour, setUse24Hour] = useState(() => {
+  const [use24Hour] = useState(() => {
     const saved = localStorage.getItem('display_24hour');
     return saved !== null ? saved === 'true' : false;
   });
-  const [theme, setTheme] = useState(() => localStorage.getItem('display_theme') || 'light');
+  const [theme] = useState(() => localStorage.getItem('display_theme') || 'light');
 
   // Apply theme on mount
   useEffect(() => {

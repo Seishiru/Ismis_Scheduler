@@ -12,7 +12,6 @@ import { GuideView } from './components/GuideView';
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { Toaster } from 'sonner';
 import type { Course } from './types/course';
-import courseAPI from './services/api';
 import "./styles/index.css";  
 
 // Removed localStorage keys - all data comes from FilesView file-based storage
