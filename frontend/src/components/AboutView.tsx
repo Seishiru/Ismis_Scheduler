@@ -6,7 +6,7 @@ export function AboutView() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-semibold">About</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold">About</h1>
         <p className="text-muted-foreground mt-1">Learn about the tool and support the project</p>
       </div>
 

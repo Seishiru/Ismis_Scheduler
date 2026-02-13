@@ -1,4 +1,5 @@
-import { Database, Calendar, Settings, Info, DoorOpen, FileJson, BookOpen } from 'lucide-react';
+import { Database, Calendar, Settings, Info, DoorOpen, FileJson, BookOpen, Menu, X } from 'lucide-react';
+import { useState } from 'react';
 
 interface SidebarProps {
   activeView: string;
@@ -6,6 +7,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const menuItems = [
     { id: 'scraper', label: 'Scraper', icon: Database },
     { id: 'files', label: 'Saved Files', icon: FileJson },
@@ -16,56 +19,121 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
     { id: 'about', label: 'About', icon: Info },
   ];
 
+  const handleMenuClick = (viewId: string) => {
+    onViewChange(viewId);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    <div className="w-64 h-screen border-r border-gray-200 dark:border-gray-700 flex flex-col" style={{ backgroundColor: 'var(--usc-green)' }}>
-      {/* Logo and Header */}
-      <div className="p-6 border-b border-white/20">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">
-            <Calendar className="w-7 h-7 text-white" />
+    <>
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex w-64 h-screen border-r border-gray-200 dark:border-gray-700 flex-col" style={{ backgroundColor: 'var(--usc-green)' }}>
+        {/* Logo and Header */}
+        <div className="p-6 border-b border-white/20">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">
+              <Calendar className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-white font-semibold text-lg">USC Course</h2>
+              <p className="text-white/80 text-sm">Schedule Optimizer</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-white font-semibold text-lg">USC Course</h2>
-            <p className="text-white/80 text-sm">Schedule Optimizer</p>
-          </div>
+        </div>
+
+        {/* Navigation Items */}
+        <nav className="flex-1 p-4">
+          <ul className="space-y-2">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeView === item.id;
+              
+              return (
+                <li key={item.id}>
+                  <button
+                    id={`sidebar-${item.id}`}
+                    onClick={() => handleMenuClick(item.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                      isActive
+                        ? 'bg-white text-[var(--usc-green)] shadow-sm'
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-white/20">
+          <p className="text-white/60 text-xs text-center">
+            <a href="https://github.com/Seishiru" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+              @Seishiru
+            </a>
+          </p>
         </div>
       </div>
 
-      {/* Navigation Items */}
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeView === item.id;
-            
-            return (
-              <li key={item.id}>
-                <button
-                  id={`sidebar-${item.id}`}
-                  onClick={() => onViewChange(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                    isActive
-                      ? 'bg-white text-[var(--usc-green)] shadow-sm'
-                      : 'text-white hover:bg-white/10'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      {/* Footer */}
-      <div className="p-4 border-t border-white/20">
-        <p className="text-white/60 text-xs text-center">
-          <a href="https://github.com/Seishiru" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-            @Seishiru
-          </a>
-        </p>
+      {/* Mobile Header with Menu Button */}
+      <div className="md:hidden w-full flex items-center justify-between p-4 border-b" style={{ backgroundColor: 'var(--usc-green)' }}>
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+            <Calendar className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-white font-semibold text-base">USC Course</h2>
+            <p className="text-white/80 text-xs">Schedule Optimizer</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="text-white p-2 hover:bg-white/10 rounded-lg transition-all"
+        >
+          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
       </div>
-    </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden w-full" style={{ backgroundColor: 'var(--usc-green)' }}>
+          <nav className="p-4">
+            <ul className="space-y-2">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeView === item.id;
+                
+                return (
+                  <li key={item.id}>
+                    <button
+                      id={`mobile-${item.id}`}
+                      onClick={() => handleMenuClick(item.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                        isActive
+                          ? 'bg-white text-[var(--usc-green)] shadow-sm'
+                          : 'text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{item.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+          <div className="p-4 border-t border-white/20">
+            <p className="text-white/60 text-xs text-center">
+              <a href="https://github.com/Seishiru" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                @Seishiru
+              </a>
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

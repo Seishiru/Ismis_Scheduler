@@ -11,7 +11,7 @@ export function GuideView({ onStartTutorial }: GuideViewProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-semibold">User Guide</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold">User Guide</h1>
         <p className="text-muted-foreground mt-1">
           Learn how to use USC Course Scheduler effectively
         </p>

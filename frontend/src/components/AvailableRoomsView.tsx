@@ -310,7 +310,7 @@ export function AvailableRoomsView({ courses, scrapeType, onLoadAllData }: Avail
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-semibold">Available Rooms</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold">Available Rooms</h1>
         <p className="text-muted-foreground mt-1">
           Find unoccupied rooms for rest or study based on scraped course data
         </p>

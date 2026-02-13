@@ -121,7 +121,7 @@ export default function App() {
   };
 
   return (
-    <div id="app-root" className="flex h-screen bg-background">
+    <div id="app-root" className="flex flex-col md:flex-row h-screen bg-background">
       <Toaster position="top-right" richColors />
       
       {/* Tutorial Overlay */}
@@ -131,12 +131,12 @@ export default function App() {
         />
       )}
       
-      {/* Sidebar */}
+      {/* Sidebar - flex row on desktop, column on mobile */}
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto bg-background">
-        <div className="p-8 max-w-7xl mx-auto">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto">
           {/* Data Status Header - Visible on all tabs */}
           {activeView !== 'settings' && activeView !== 'about' && (
             <DataStatusHeader lastUpdated={lastUpdated} />

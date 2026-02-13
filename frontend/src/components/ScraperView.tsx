@@ -208,8 +208,8 @@ export function ScraperView({ onCoursesScraped, onManualScrape }: ScraperViewPro
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-semibold">Course Scraper</h1>
-        <p className="text-muted-foreground mt-1">Scrape course data from USC ISMIS</p>
+        <h1 className="text-2xl md:text-3xl font-semibold">Course Scraper</h1>
+        <p className="text-muted-foreground mt-1 text-sm md:text-base">Scrape course data from USC ISMIS</p>
       </div>
 
       {/* Info Card */}

@@ -424,9 +424,9 @@ export function ScheduleBuilder({ courses, selectedCoursesByCode = new Map(), sc
     <div className="space-y-6">
       {/* Scrape Type Indicator - Floating Bubble */}
       {scrapeType === 'all' && (
-        <div className="fixed top-8 right-8 z-50 animate-pulse">
+        <div className="fixed top-20 md:top-8 right-4 md:right-8 z-50 animate-pulse max-w-xs md:max-w-none">
           <div className="bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400 dark:border-yellow-600 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
-            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse flex-shrink-0"></div>
             <span className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">
               Using All Courses Data
             </span>
@@ -435,29 +435,29 @@ export function ScheduleBuilder({ courses, selectedCoursesByCode = new Map(), sc
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold">Schedule Builder</h1>
-          <p className="text-muted-foreground mt-1">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex-1">
+          <h1 className="text-2xl md:text-3xl font-semibold">Schedule Builder</h1>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
             {showSelection 
               ? 'Select courses to generate optimal schedules' 
               : 'Auto-generate optimal schedule combinations from your selected courses'
             }
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
           {scheduledCourses.length > 0 && !showSelection && (
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-[var(--usc-green)]" />
-              <span className="font-medium">{scheduledCourses.length} time slots scheduled</span>
+            <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+              <Clock className="w-4 h-4 text-[var(--usc-green)] flex-shrink-0" />
+              <span className="font-medium">{scheduledCourses.length} slots</span>
             </div>
           )}
           {!showSelection ? (
-            <div className="flex flex-col items-end gap-2">
+            <div className="flex flex-col items-start sm:items-end gap-2 w-full sm:w-auto">
               <Button
                 onClick={() => setShowSelection(true)}
                 disabled={courses.length === 0 || scrapeType === 'all'}
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
                 style={{ 
                   backgroundColor: (courses.length === 0 || scrapeType === 'all') ? '#6b7280' : 'var(--usc-green)',
                   color: 'white'
@@ -467,30 +467,32 @@ export function ScheduleBuilder({ courses, selectedCoursesByCode = new Map(), sc
                 Auto-Generate Schedules
               </Button>
               {scrapeType === 'all' && (
-                <p className="text-xs text-amber-600 dark:text-amber-400 text-right max-w-xs">
+                <p className="text-xs text-amber-600 dark:text-amber-400 max-w-xs">
                   Not available with all courses data. Use Scraper to load your specific courses.
                 </p>
               )}
             </div>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 onClick={() => setShowSelection(false)}
                 variant="outline"
+                className="flex-1 sm:flex-none"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleGenerateSchedules}
                 disabled={generating || selectedCourses.size === 0}
-                className="gap-2"
+                className="gap-2 flex-1 sm:flex-none"
                 style={{ 
                   backgroundColor: generating || selectedCourses.size === 0 ? '#6b7280' : 'var(--usc-green)',
                   color: 'white'
                 }}
               >
                 <Sparkles className="w-4 h-4" />
-                {generating ? 'Generating...' : `Generate (${selectedCourses.size} selected)`}
+                <span className="hidden sm:inline">{generating ? 'Generating...' : `Generate (${selectedCourses.size} selected)`}</span>
+                <span className="sm:hidden">{generating ? 'Gen...' : `(${selectedCourses.size})`}</span>
               </Button>
             </div>
           )}
@@ -734,7 +736,7 @@ export function ScheduleBuilder({ courses, selectedCoursesByCode = new Map(), sc
       {!showSelection && (
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[1200px]">
+          <div className="min-w-full md:min-w-[1200px]">
             {/* Header */}
             <div className="grid grid-cols-8 border-b border-border">
               <div className="p-4 bg-muted border-r border-border">

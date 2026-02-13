@@ -165,7 +165,7 @@ export function FilesView({ onSelectCourses, refreshTrigger = 0, currentFilename
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-semibold">Saved Files</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold">Saved Files</h1>
         <p className="text-muted-foreground mt-1">
           View and switch between your scraped course datasets
         </p>

@@ -130,52 +130,62 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
 
   return (
     <Card className="overflow-hidden">
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700" style={{ backgroundColor: 'var(--usc-green)' }}>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-semibold text-white">Scraped Course Data</h2>
-            <Button
-              onClick={() => setShowDetailedView(!showDetailedView)}
-              size="sm"
-              variant="secondary"
-              className="gap-2"
-            >
-              {showDetailedView ? (
-                <>
-                  <EyeOff className="w-4 h-4" />
-                  Hide Details
-                </>
-              ) : (
-                <>
-                  <Eye className="w-4 h-4" />
-                  Show Details
-                </>
-              )}
-            </Button>
+      <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700" style={{ backgroundColor: 'var(--usc-green)' }}>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <h2 className="text-lg md:text-xl font-semibold text-white">Scraped Course Data</h2>
+              <Button
+                onClick={() => setShowDetailedView(!showDetailedView)}
+                size="sm"
+                variant="secondary"
+                className="gap-2 w-fit"
+              >
+                {showDetailedView ? (
+                  <>
+                    <EyeOff className="w-4 h-4" />
+                    Hide Details
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-4 h-4" />
+                    Show Details
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="text-white/80 text-sm">
+              {visibleCourses.length} of {courses.length} courses
+            </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="hide-full-courses"
-                checked={hideFullCourses}
-                onCheckedChange={handleHideFullChange}
-                className="border-white/40"
-              />
-              <Label htmlFor="hide-full-courses" className="text-white/90 text-sm cursor-pointer">
-                Hide Full
-              </Label>
-              <Checkbox
-                id="hide-dissolved-courses"
-                checked={hideDissolvedCourses}
-                onCheckedChange={handleHideDissolvedChange}
-                className="border-white/40"
-              />
-              <Label htmlFor="hide-dissolved-courses" className="text-white/90 text-sm cursor-pointer">
-                Hide Dissolved
-              </Label>
+          
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col md:flex-row md:items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="hide-full-courses"
+                  checked={hideFullCourses}
+                  onCheckedChange={handleHideFullChange}
+                  className="border-white/40"
+                />
+                <Label htmlFor="hide-full-courses" className="text-white/90 text-sm cursor-pointer">
+                  Hide Full
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="hide-dissolved-courses"
+                  checked={hideDissolvedCourses}
+                  onCheckedChange={handleHideDissolvedChange}
+                  className="border-white/40"
+                />
+                <Label htmlFor="hide-dissolved-courses" className="text-white/90 text-sm cursor-pointer">
+                  Hide Dissolved
+                </Label>
+              </div>
               {selectedCoursesByCode.size > 0 && (
-                <>
-                  <div className="w-px h-5 bg-white/20 mx-1" />
+                <div className="flex items-center gap-2">
+                  <div className="w-px h-5 bg-white/20" />
                   <Checkbox
                     id="unselect-all"
                     checked={false}
@@ -185,22 +195,19 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
                   <Label htmlFor="unselect-all" className="text-white/90 text-sm cursor-pointer">
                     Unselect All
                   </Label>
-                </>
+                </div>
               )}
             </div>
-            <div className="relative">
+            <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
               <Input
                 type="text"
                 placeholder="Search courses..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-9 w-64 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20"
+                className="pl-9 w-full bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20"
               />
             </div>
-            <p className="text-white/80 text-sm">
-              {visibleCourses.length} of {courses.length} courses
-            </p>
           </div>
         </div>
       </div>
@@ -323,13 +330,13 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
 
       {/* Pagination Controls */}
       {visibleCourses.length > 0 && (
-        <div className="flex items-center justify-between gap-4 p-4 border-t border-gray-200 dark:border-gray-700 bg-muted/50">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 border-t border-gray-200 dark:border-gray-700 bg-muted/50">
           <div className="flex items-center gap-2">
-            <Label htmlFor="items-per-page" className="text-sm">
+            <Label htmlFor="items-per-page" className="text-sm whitespace-nowrap">
               Items per page:
             </Label>
             <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
-              <SelectTrigger id="items-per-page" className="w-20">
+              <SelectTrigger id="items-per-page" className="w-24">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -341,7 +348,7 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
             </Select>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <span className="text-sm text-muted-foreground">
               Page {currentPage} of {totalPages} • Showing {paginatedCourses.length} of {visibleCourses.length} courses
             </span>
@@ -354,7 +361,7 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
                 className="gap-1"
               >
                 <ChevronLeft className="w-4 h-4" />
-                Previous
+                <span className="hidden sm:inline">Previous</span>
               </Button>
               <Button
                 variant="outline"
@@ -363,7 +370,7 @@ export function DataTable({ courses, selectedCoursesByCode = new Map(), onCourse
                 disabled={currentPage === totalPages}
                 className="gap-1"
               >
-                Next
+                <span className="hidden sm:inline">Next</span>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
