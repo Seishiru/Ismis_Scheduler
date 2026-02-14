@@ -1,5 +1,19 @@
 # ISMIS Course Scheduler API Setup
 
+## GitHub Actions CI/CD
+
+This project has automated testing configured with GitHub Actions. Every push and pull request triggers the **Playwright Tests** workflow to validate dependencies and run tests.
+
+**View workflow status**: https://github.com/Seishiru/Ismis_Scheduler/actions
+
+The workflow automatically:
+- Checks out your code
+- Sets up Python 3.13
+- Installs dependencies from `backend/requirements.txt`
+- Installs Playwright browsers
+- Runs pytest with trace capture on failures
+- Uploads test artifacts for debugging
+
 ## Backend Setup
 
 ### 1. Install Python Dependencies
@@ -8,6 +22,13 @@
 cd backend
 pip install -r requirements.txt
 ```
+
+**Note**: The `requirements.txt` includes:
+- `playwright` - For web scraping and browser automation
+- `fastapi` - For API server
+- `pytest` - For automated testing
+- `pytest-playwright` - For Playwright test integration
+- Other dependencies listed in the file
 
 ### 2. Install Playwright Browsers
 
@@ -85,6 +106,39 @@ curl http://localhost:5000/health
 # Get courses
 curl http://localhost:5000/api/courses
 ```
+
+## Automated Testing
+
+### Running Tests Locally
+
+```bash
+# Run all tests (with Playwright integration)
+cd backend
+pytest --tracing=retain-on-failure
+
+# Run specific test file
+pytest test_real_data.py
+
+# Run with verbose output
+pytest -v
+```
+
+### GitHub Actions Testing
+
+Tests automatically run on every push via GitHub Actions:
+
+1. **Push your code** to `main` or `master` branch
+2. **Check Actions tab** on GitHub for workflow status
+3. **View test logs** by clicking the workflow run
+4. **Download traces** from artifacts for debugging failed tests
+
+### Test Coverage
+
+Current tests include:
+- `test_real_data.py` - Tests with real course data
+- Additional unit tests as needed
+
+**Note**: Some tests (`test_friday.py`, `test_real_data.py`) are excluded from CI/CD as they require sample data files that aren't in the repository. You can run them locally if needed.
 
 ## Troubleshooting
 

@@ -74,6 +74,27 @@ ISMIS_Scheduler/
 - **Sonner**: Toast notification library
 - **CSS**: Custom styling
 
+## Continuous Integration
+
+This project uses **GitHub Actions** for automated testing and validation on every push and pull request.
+
+### GitHub Actions Workflow
+
+The project includes a Playwright CI/CD workflow (`.github/workflows/playwright.yml`) that:
+
+- **Automatically triggers** on every push and pull request to `main` or `master` branches
+- **Installs dependencies** from `backend/requirements.txt`
+- **Installs Playwright browsers** for browser automation
+- **Runs tests** using pytest
+- **Captures traces** and uploads them as artifacts for debugging failed tests
+
+**View the workflow status:**
+1. Go to the **Actions** tab on GitHub: https://github.com/Seishiru/Ismis_Scheduler/actions
+2. Click on the **Playwright Tests** workflow
+3. A green checkmark ✅ means tests passed; a red X means there's an issue
+
+This ensures code quality and catches issues early before merging.
+
 ## Installation
 
 ### Prerequisites
