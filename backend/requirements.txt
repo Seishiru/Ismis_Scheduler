@@ -6,6 +6,7 @@ pydantic==2.10.5
 
 # Testing
 pytest==7.4.4
+pytest-playwright==0.4.4
 
 # Additional utilities
 python-multipart==0.0.20
